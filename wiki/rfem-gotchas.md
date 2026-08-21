@@ -2,7 +2,7 @@
 name: rfem-gotchas
 description: Comportamientos no obvios de RFEM 6 descubiertos en la práctica. Revisar antes de arrancar un modelo nuevo.
 status: ACTIVO
-last_updated: 2026-08-20
+last_updated: 2026-08-21
 ---
 
 # RFEM — gotchas y comportamientos no obvios
@@ -20,6 +20,15 @@ last_updated: 2026-08-20
 ## Snow Load Wizard
 
 - Solo reconoce geometría rectangular plana, monopitch o duopitch simple. NO genera arrastre (Cap.7) ni deslizamiento (Cap.9) en techos escalonados — manual.
+
+## Free Rectangular Load (cargas manuales tipo arrastre, no balanceada custom, etc.)
+
+- A diferencia del Snow/Wind Wizard (que reparte directo a Members), **Free Rectangular Load exige una Surface real asignada** ("Assigned to Surfaces No."). Con techos modelados solo con correas/cabios (sin Surface), crear una Surface nueva con **Stiffness Type** que NO aporte rigidez real, solo para transferencia de carga — buscar en el desplegable una opción tipo "Load transfer surface" (habilita el checkbox "Apply loads using the load transfer surface", que aparece en gris con Stiffness Type "Standard").
+- Distribución "Linear in X/Y": el **signo de la coordenada** del segundo corner point define hacia qué lado crece/decrece la rampa — si el triángulo sale espejado hacia el lado contrario a la superficie real, invertir el signo de esa coordenada (no alcanza con elegir bien la distribución). Verificar en **vista 3D/isométrica**, no en planta — en vista de planta (top view) no se nota la altura del triángulo y puede parecer que la carga "no se ve" o se ve como una simple línea.
+
+## Load Transfer Surface — restringir qué miembros reciben la carga
+
+Por defecto, una Surface de reparto (Stiffness Type "Load transfer surface") tiende a repartir la carga a TODOS los miembros dentro de su huella, no solo a las correas — problema cuando conviven correas y cabreadas/cabios en el mismo paño (la carga real de chapa apoya en correas primero, no directo en la cabreada). Se soluciona en las propiedades de la Surface, pestaña **"Load Transfer"** → campo **"Remove influence from members"** → seleccionar ahí los miembros que NO deben recibir carga (cabreadas, cabios, etc.), dejando que solo las correas la reciban. Puede haber una forma más directa de seleccionar positivamente "solo estos miembros" en vez de excluir el resto — pendiente de confirmar si existe.
 
 ## Visualización
 

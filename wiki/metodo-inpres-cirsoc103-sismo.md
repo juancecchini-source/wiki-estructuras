@@ -1,8 +1,8 @@
 ---
 name: metodo-inpres-cirsoc103-sismo
-description: Metodología de carga sísmica según INPRES-CIRSOC 103 Parte I. EN DESARROLLO — ver sección Pendientes al pie.
+description: Metodología de carga sísmica según INPRES-CIRSOC 103 Parte I, incluye combinación de acciones (Art. 3.7). EN DESARROLLO — ver sección Pendientes al pie.
 status: ACTIVO
-last_updated: 2026-08-20
+last_updated: 2026-08-21
 ---
 
 # Carga sísmica — INPRES-CIRSOC 103 Parte I
@@ -23,14 +23,30 @@ Ver `normativa-vigente.md` — zonificación clásica de 5 zonas sigue vigente p
 
 ## Simultaneidad con viento
 
-NO se combinan viento y sismo (Art. 3.7.4) — son casos independientes a envolver, no sumar.
+NO se combinan viento y sismo (Art. 3.7.4, confirmado con el texto del reglamento) — son casos independientes a envolver, no sumar.
+
+## Combinación de acciones (Art. 3.7, confirmado con el texto del reglamento)
+
+- **[3.16]** 1,20D ± 1,00E + f1×L + f2×S
+- **[3.17]** 0,9D ± 1,00E
+- **[3.18]** E = EH + EV (definición — NO es la fórmula de magnitud de Ev, esa está en otra parte, pendiente de ubicar)
+- **[3.19]** (estructura de acero, componentes sensibles a sobrerresistencia) 1,20D ± Ω0×EH + 0,5L + 0,2S
+- **[3.20]** 0,9D ± Ω0×EH
+
+## W (peso sísmico) — estado actual
+
+W = D + f1×L + f2×S. Para este proyecto puntual:
+- **D**: resuelto (autopeso real LC1 + peso de chapa LC30, ya modelados).
+- **f2×S**: resuelto conceptualmente (0,20 × envolvente de nieve RC1) — falta armar la combinación en RFEM.
+- **f1×L**: probablemente **≈0 para este proyecto** — las tribunas están apoyadas en el suelo con fundación propia, independientes de columnas/vigas/pórticos (no le transmiten masa sísmica al sistema resistente que se está diseñando), y todo el edificio es a nivel de suelo (sin entrepisos apoyados en la estructura). **Condición para que esto sea válido**: debe existir junta de separación sísmica real entre tribuna y edificio (evitar golpeteo/pounding) — confirmar que está contemplada en el proyecto.
 
 ## Pendientes por cerrar (no dar por completo el cálculo sin esto)
 
-- **Ev (componente vertical del sismo)**: E = EH ± EV (ec.3.18) — falta calcular y sumar.
+- **Fórmula de magnitud de Ev**: la ec.3.18 solo define E=EH+EV, no da el valor de Ev — buscar en el reglamento (probablemente cerca del Cap.6, junto a las ecuaciones de C).
 - **Art. 6.3(a)**: acción sísmica vertical específica para voladizos/balcones/aleros — aparte de Ev general, verificación puntual para cualquier voladizo de cubierta.
+- **Junta de separación sísmica tribuna-edificio**: confirmar que está prevista en el proyecto (condición para que f1×L≈0 sea válido).
 - **Torsión accidental (Tabla 6.3)**: 0%/5%/10% según regularidad en planta (Tabla 2.3) — pendiente de clasificar con la geometría en planta completa (el volumen adosado más bajo genera asimetría a revisar).
-- **Rigidez de diafragma (8.2.1)**: techo de chapa sobre reticulado probablemente es diafragma FLEXIBLE (no rígido) — permitiría diseñar cada pórtico por área de influencia sin torsión entre pórticos. Confirmar antes de complicarse con torsión global.
+- **Rigidez de diafragma (8.2.1)**: techo de chapa sobre reticulado — **asumido FLEXIBLE como hipótesis de precálculo** (no rígido), sin demostración formal todavía. Permite diseñar cada pórtico por área de influencia sin torsión entre pórticos, y además exime del cálculo de los casos torsionales de viento (ASCE 7 Apéndice D — exención requiere h≤9,1m, que ya se cumple, + diafragma flexible). Confirmar en el cálculo definitivo antes de dar por buena la exención.
 - **Fundaciones (Cap.9)**: arriostramiento de bases — pendiente para etapa de detallado.
 
 ## RFEM

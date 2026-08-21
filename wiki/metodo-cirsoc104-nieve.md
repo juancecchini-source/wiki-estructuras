@@ -2,7 +2,7 @@
 name: metodo-cirsoc104-nieve
 description: Metodología para determinar y aplicar carga de nieve según CIRSOC 104-2005 (vigente), incluyendo arrastre y deslizamiento en techos escalonados.
 status: ESTABLE
-last_updated: 2026-08-20
+last_updated: 2026-08-21
 ---
 
 # Carga de nieve — CIRSOC 104-2005
@@ -37,11 +37,19 @@ Para techo bajo adosado a pared más alta:
 
 ## Cap. 9 — Nieve caída por deslizamiento
 
-Aplica si la cubierta superior es lisa (chapa cuenta) con pendiente >2%, u otra superficie con pendiente >16%. Fórmula: carga total por metro de alero = 0,4 × pf(de la cubierta SUPERIOR, no la baja) × W(distancia horizontal alero-cumbrera de la cubierta superior), distribuida uniformemente sobre 4,5m de ancho desde el alero de la cubierta baja (reducir proporcionalmente si el ancho disponible es menor a 4,5m).
+Aplica si la cubierta superior es lisa (chapa cuenta) con pendiente >2%, u otra superficie con pendiente >16%. Fórmula: carga total por metro de alero = 0,4 × pf(de la cubierta SUPERIOR, no la baja) × W(distancia horizontal alero-cumbrera de la cubierta superior), distribuida uniformemente sobre 4,5m de ancho **desde el alero de la cubierta SUPERIOR** (o sea, arrancando junto a la pared/escalón — mismo origen que la franja de arrastre del Cap.7, NO desde el alero exterior de la cubierta baja) (reducir proporcionalmente si el ancho disponible es menor a 4,5m).
 
 ## Regla crítica: Cap.7 y Cap.9 NO se suman entre sí
 
 Confirmado contra la norma madre (ASCE): son mecanismos físicos distintos (arrastre = durante la nevada; deslizamiento = derretimiento posterior) y el reglamento los trata como **casos de carga alternativos a envolver**, no aditivos. Cada uno se suma por separado a la balanceada. Armar 3 casos: (1) balanceada sola, (2) balanceada+arrastre, (3) balanceada+deslizamiento — dejar que el software tome la envolvente.
+
+## Combinaciones con techo escalonado — coherencia direccional nave/arrastre
+
+Cuando la cubierta que genera el escalón (arrastre, Cap.7) es una duopitch con su propia carga no balanceada (sección "Carga no balanceada" de este mismo método), **las dos direcciones de viento no son independientes entre sí** — es el mismo viento el que causa ambos efectos. El agua de la nave adyacente al escalón queda a sotavento (carga mayor) exactamente con el mismo viento que arrastra más nieve hacia la cubierta baja (arrastre sotavento); con el viento contrario, esa agua queda a barlovento Y el arrastre también es barlovento.
+
+Al armar combinaciones que crucen el estado de la nave (balanceada/S1/S2) con el arrastre del alero: **solo son válidas las combinaciones donde ambos corresponden al mismo viento** (S-dirección-1 + arrastre-sotavento; S-dirección-2 + arrastre-barlovento). Cruzar la dirección 1 con arrastre-barlovento (o viceversa) representa dos vientos opuestos actuando a la vez — no ocurre en la realidad, hay que descartarlo.
+
+La carga balanceada (sin dirección) y el deslizamiento (Cap.9, mecanismo térmico/gravitatorio, no eólico) no tienen esta restricción — se combinan libremente con cualquier estado de la nave.
 
 ## Cargas parciales (Cap. 5)
 
