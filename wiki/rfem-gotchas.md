@@ -51,6 +51,28 @@ Por defecto, una Surface de reparto (Stiffness Type "Load transfer surface") tie
 - El generador de combinaciones de carga puede no ofrecer la misma edición ASCE que el generador de cargas — no es un problema real si el factor de carga de viento (1,0) es igual en ambas ediciones, lo cual aplica desde ASCE 7-10 en adelante.
 - Diferencias de qh >5% entre ediciones ASCE casi siempre son un dato mal cargado (unidades, campo por defecto en otra unidad), no una diferencia editorial genuina.
 
+## Action Combinations (generador automático) — desactivado a propósito en este proyecto
+
+El generador automático de **Action Combinations** (pestaña del mismo nombre en Load Cases & Combinations) arma TODAS las combinaciones posibles a partir de las Actions asignadas (D, W, S, Lr, E...) y **no dejaba borrar selectivamente para volver a generar solo algunas** — quedó desactivado (28/08) para poder armar las combinaciones de sismo a mano (necesario por el plegado de Ev en el factor de D y el chequeo aislado del voladizo, reglas que el generador genérico no conoce).
+
+**Para usarlo sin perder las combos manuales de sismo**: en la Action Combination (ej. AC1) → tab **Assignment** → de la lista "To Assign" (A1 Dead, A2 Wind, A3 Snow, A4 Roof live, A5/A6 Earthquake) seleccionar con `>>` **solo D, W, S, Lr** — dejar afuera las Earthquake load (A5/A6). Así genera nomás las combinaciones de gravedad+viento (ASCE 7 §2.3.1 básicas) sin tocar ni duplicar las de sismo, que quedan armadas a mano en la pestaña Load Combinations.
+
+**Ojo: esto NO alcanza solo — el generador igual mete sismo.** ASCE 7 §2.3.1 (la norma detrás de "Section 2.3 LRFD") incluye NATIVAMENTE 2 de sus 7 fórmulas básicas con término E (1,2D+1,0E+L+0,2S y 0,9D+1,0E) — el generador las arma igual aunque no hayas tildado Earthquake en el Assignment de una AC puntual, porque es la lista completa de la norma. Si además tenés varias Load Cases de sismo agrupadas en una sola Action (ej. LC34-38 bajo "Earthquake load"), el generador las trata como **simultáneas por defecto** y las suma todas juntas en una sola combinación — un desastre (llegamos a 629 combinaciones, 279 mal armadas sumando direcciones opuestas y hasta Fv+Fvup juntas).
+
+**Solución real — Load Case Relations (Exclusive Load Cases)**: Design Situations → DS correspondiente → tildar **"Consider inclusive/exclusive load cases"** → editar la relación (ícono para crear/editar "Relationship Between Load Cases") → tab **Exclusive Load Cases**. Ahí NO se puede poner el mismo rango en "Selected Load Cases" y "Do Not Combine with Load Cases" (tira error: *"The load case is included in the selected load cases"*) — hay que armarlo **par por par**, una fila por cada carga excluida de las demás:
+
+| Selected Load Cases | Do Not Combine with Load Cases |
+|---|---|
+| LC34 | LC35-38 |
+| LC35 | LC34, LC36-38 |
+| LC36 | LC34-35, LC37-38 |
+| LC37 | LC34-36, LC38 |
+| LC38 | LC34-37 |
+
+Con esto, el generador nunca combina dos de esas cargas en la misma combinación — quedan como alternativas mutuamente excluyentes, no sumables. Asignar la relación a la Design Situation correspondiente (campo "Assignment to Design Situations" en el mismo diálogo).
+
+**Aun así, las combinaciones de sismo que arma el generador quedan con 1,20D/0,90D genérico, sin el plegado de Ev específico de INPRES-CIRSOC** (nuestro 1,278/0,822) — son válidas en su forma pero menos precisas, y en el lado de 0,9D son *menos* conservadoras que las nuestras para chequeos de arrancamiento (0,90D+E tiene más D disponible que 0,822D+E). Mejor borrarlas después de generar y quedarse solo con las combinaciones de sismo armadas a mano.
+
 ## Materiales
 
 - Perfiles W: material ASTM A992 (o A572 Gr.50 si A992 no aparece en la biblioteca — mismo Fy/Fu).
