@@ -1,8 +1,8 @@
 ---
 name: metodo-inpres-cirsoc103-sismo
-description: Metodología de carga sísmica según INPRES-CIRSOC 103 Parte I, incluye combinación de acciones (Art. 3.7). EN DESARROLLO — ver sección Pendientes al pie.
+description: Metodología de carga sísmica según INPRES-CIRSOC 103 Parte I, incluye combinación de acciones (Art. 3.7), fórmula de Ev (Art. 3.5.2). Método dinámico modal-espectral evaluado y DESCARTADO para este proyecto (28/08) — se vuelve al método estático. Ver sección "Cierre del método dinámico" y Pendientes al pie.
 status: ACTIVO
-last_updated: 2026-08-21
+last_updated: 2026-08-28
 ---
 
 # Carga sísmica — INPRES-CIRSOC 103 Parte I
@@ -33,6 +33,22 @@ NO se combinan viento y sismo (Art. 3.7.4, confirmado con el texto del reglament
 - **[3.19]** (estructura de acero, componentes sensibles a sobrerresistencia) 1,20D ± Ω0×EH + 0,5L + 0,2S
 - **[3.20]** 0,9D ± Ω0×EH
 
+### Ev (componente vertical) — confirmado, Art. 3.5.2 (verificado en el texto del reglamento, pág. 49/106)
+
+**[3.10]** Ev = (Ca/2) × γr × D — mismo Ca (Tabla 3.1) y γr (grupo de riesgo) que ya se usan en el resto del cálculo, no hace falta ningún dato nuevo.
+
+Como Ev es proporcional a D, al reemplazar E=EH+EV en [3.16]/[3.17] el término se pliega en el coeficiente de D (mismo formato que ASCE 7):
+- [3.16] → (1,20 + Ca/2×γr)×D ± EH + f1×L + f2×S
+- [3.17] → (0,9 − Ca/2×γr)×D ± EH (el signo del término Ev acompaña al de EH; usar la combinación de signos que da el caso más desfavorable en cada verificación)
+
+### Art. 6.3 (voladizos/balcones/aleros) — confirmado (pág. 70/106)
+
+Aparte del Ev general de 3.5.2, los componentes sensibles a vibración vertical (6.3.a: voladizos, balcones, aleros) se verifican con dos fuerzas verticales adicionales, que NO se superponen con Ev:
+- **[6.15]** Fv = Ca × γr × Wi (hacia abajo)
+- **[6.16]** Fvup = −Ca × Wi (hacia arriba — sin γr, signo negativo explícito en el reglamento)
+
+**Wi NO es solo el peso propio del voladizo** — el reglamento define Wi de forma general en el Art. "Acción sísmica horizontal" (antes de 3.5, ec. **[3.15]**): **Wi = Di + f1×Li + f2×Si**, la misma estructura que el W global (usada también en 4.3/6.2: W=ΣWi), aplicada localmente al componente/punto i. Para el voladizo: Di = peso propio de chapa+vigas/reticulado que continúan en el vuelo; f2×Si = nieve tributaria del voladizo (NO se puede omitir); f1×Li = sobrecarga de uso tributaria (probablemente ≈0, misma lógica que el W global, pendiente confirmar si aplica Lr acá).
+
 ## W (peso sísmico) — estado actual
 
 W = D + f1×L + f2×S. Para este proyecto puntual:
@@ -40,13 +56,92 @@ W = D + f1×L + f2×S. Para este proyecto puntual:
 - **f2×S**: resuelto conceptualmente (0,20 × envolvente de nieve RC1) — falta armar la combinación en RFEM.
 - **f1×L**: probablemente **≈0 para este proyecto** — las tribunas están apoyadas en el suelo con fundación propia, independientes de columnas/vigas/pórticos (no le transmiten masa sísmica al sistema resistente que se está diseñando), y todo el edificio es a nivel de suelo (sin entrepisos apoyados en la estructura). **Condición para que esto sea válido**: debe existir junta de separación sísmica real entre tribuna y edificio (evitar golpeteo/pounding) — confirmar que está contemplada en el proyecto.
 
+## Corte basal y distribución en altura (Art. 6.2, confirmado contra el texto del reglamento)
+
+- **[6.1]** V₀ = C × W
+- **[6.2]** W = ΣWi (i=1...n niveles)
+- **[6.7]** T (a usar) ≤ Cu×Ta (Tabla 6.1, Cu según as — interpolable)
+- **[6.11]** Fk = (Wk×hk×V₀) / Σ(Wi×hi) — distribución **lineal** en altura (a diferencia de ASCE 7, NO hay exponente k ni interpolación por período)
+- **[6.12]/[6.13]** — caso especial (90% en niveles intermedios + 10% extra concentrado en el último nivel) SOLO si el período T sin el límite [6.7] supera **2×T2**. Chequear siempre este umbral antes de asumir que aplica [6.11] directa.
+
+Sin entrepisos pero con dos alturas de techo (nave vs. alero-vestuarios), tratar como **n=2 niveles de masa** para [6.11], cada uno con su Wk y su altura representativa (centro de gravedad del techo respectivo — aproximación razonable: promedio eave-cumbrera). Wk de cada zona se obtiene igual que W global: sumar reacciones de `CC_W_sismico` filtrando solo los nodos de esa zona.
+
+**Reparto de Fk entre los pórticos de una misma zona**: por **masa tributaria** (ancho de paño de cada pórtico / ancho total de la zona, con ajuste de medio paño en los pórticos de punta), NO por rigidez relativa. Es la distribución correcta para diafragma flexible (cada pórtico resiste su propia masa, sin redistribución vía diafragma) y tiene la ventaja práctica de que **no depende de las secciones** — no hay que rehacer el reparto cada vez que se ajustan perfiles, a diferencia de un reparto por rigidez (que sí lo exigiría, y fue parte de lo que hizo laborioso el estático la primera vez).
+
+## Método dinámico (Cap. 7, Procedimiento Modal Espectral) — evaluado y DESCARTADO para este proyecto (ver "Cierre del método dinámico" más abajo). Queda documentado como referencia para un proyecto futuro con diafragma rígido/semirrígido real.
+
+Decisión tomada 27/08: migrar del estático al dinámico
+
+Motivo: el reparto manual del método estático (por zona nave/alero, por altura, por pórtico, por dirección) se volvió muy laborioso y se rehace por completo cada vez que cambian las secciones. Con RF-DYNAM Pro (add-ons "Modal Analysis" + "Response Spectrum Analysis", ya activados en Edit Model→Add-ons) la masa se deriva de las combinaciones de carga y se recalcula sola.
+
+**El cálculo estático NO se descarta** — el reglamento lo exige como piso de comparación:
+
+- **[7.2.3]** Modos a considerar: hasta que la masa acumulada sea ≥90% en cada dirección analizada.
+- **[7.1]** Cm = Sam × γr / R — ordenada espectral por modo (misma lógica de C que ya usamos, aplicada modo por modo).
+- **[7.2.4]** Superposición modal: **CQC**. Si los períodos de los modos a superponer difieren >10% entre sí, se admite SRSS.
+- **[7.2.5] Solicitaciones mínimas**: si el corte basal dinámico (Voe) resulta **menor al 85%** del corte basal estático V₀ (según 6.2 — ya calculado, V₀=364,83 kN), escalar las solicitaciones dinámicas por 0,85×V₀/Voe.
+- **[7.2.6]** Torsión accidental en el método dinámico: se modela corriendo el centro de masa la distancia ec_ak (misma Tabla 6.3), no como momento torsor aparte.
+- **[7.1.2]**: diafragmas NO rígidos (nuestro caso, flexible) requieren grados de libertad adicionales para los movimientos relativos entre masas — se resuelve solo al usar "masas desde combinación de carga" (reparte masa nodo por nodo según la carga real, no 2 masas lumped por zona).
+
+### Setup en RFEM
+
+1. Add-ons activos: Modal Analysis + Response Spectrum Analysis (Edit Model→Add-ons).
+2. Load Case LC32, tipo **Modal Analysis** → masas importadas desde `CC_W_sismico` (1,05×LC1+1,05×LC30+0,20×LC23+0,20×LC29) vía "Import masses only from load case/load combination".
+3. Load Case LC33, tipo **Response Spectrum Analysis** → importa modal desde LC32. Espectro **RS1 "According to Standard - INPRES-CIRSOC 103 | 2013-07"** (sí está soportado nativamente, confirmado — normas activadas en Edit Model→Base Data→Standards I, sección "Design | Standard Group" → "Dynamic analysis"). Asignado solo a direcciones **X e Y** (NO a Z — la vertical se resuelve aparte con Ev, ec. 3.10, no por espectro dinámico, ver Art. 7.1.1).
+4. Parámetros de RS1 que el default de RFEM trae MAL y hay que corregir a mano: **Seismic group** (default A0 → cambiar a **A**), **Spectral type** (default 1/SA-SC → cambiar a **2**/SD), **Overall reduction factor R** (default 1,5 → cambiar a **3,0**, no se autocalcula). Al corregir Group y Type, Ca/Cv/γr se recalculan solos (verificado: dan 0,120/0,180/1,300, coinciden exactamente con lo calculado a mano). Na=1, Nv=1,2, ζ=5%, fa=1 vienen bien por default, no tocar.
+5. SPS1 (Spectral Analysis Settings de LC33): combination rule **CQC** (default trae SRSS, cambiar). **Damping for CQC Rule: D=0,05 (5%) — quedó en 0,000 por default, PENDIENTE confirmar que se corrigió.**
+
+## Cierre del método dinámico (28/08) — descartado para este proyecto
+
+Se migró del método estático al dinámico el 27/08 (ver sección de arriba) porque el reparto manual se volvió muy laborioso. En el camino aparecieron varios problemas de modelado en RFEM que había que resolver antes de poder correr el modal — quedaron documentados como gotchas generales en `rfem-gotchas.md` (sección "Análisis Modal/Dinámico") porque no son específicos de sismo: tipo Cable vs. Truss en arriostramientos, rótulas de correas generando nodos singulares, Mass Matrix Settings, nodo corrupto con ID fuera de rango, diafragmas rígidos para participación de masa.
+
+**Bloqueador**: la participación de masa modal nunca llegó cerca del 90% exigido (ec. 7.2.3). Se probaron dos configuraciones:
+
+1. **Sin diafragma** (solo pórticos + correas + puntales reales conectando pórticos entre sí): con 15-50 modos se estancó en ~35%(X)/42%(Y). Se repitió el 28/08 con 80 modos (método "Automatic, to reach effective modal mass factors", techo 200 modos) y dio prácticamente el mismo resultado: **34,87%(X) / 42,02%(Y) / 11,31%(rotZ)** — plateau real, no un problema de cantidad de modos.
+2. **Con diafragma rígido** (2 Rigid Coupling tipo Diaphragm — Special Objects: uno en los nodos de apoyo de cabreada de la nave, eave 5,85m, plano horizontal; otro en el alero, plano inclinado 4,7m→3,47m): con 10 modos la participación bajó a 14,33%(X) / **0,00%(Y)** — peor que sin diafragma. Diagnóstico: los diafragmas reordenaron los modos y el que cargaba masa en Y quedó fuera de los primeros 10.
+
+**Por qué se descarta y no se sigue insistiendo con más modos**: el Rigid Coupling tipo Diaphragm de RFEM está pensado para elementos de alta rigidez en el plano (losas de hormigón, entrepisos) — no para chapa sobre reticulado sin topping, que la literatura idealiza como diafragma **flexible** (AISC, "Impact of Diaphragm Behavior on the Seismic Design of Low-Rise Steel Buildings", 2008: sistemas de steel deck sin topping con pórticos arriostrados se idealizan como diafragma flexible). Forzar un diafragma rígido acopla artificialmente pórticos que en la realidad casi no se ayudan entre sí — no es una corrección del modelo, es alejarlo del comportamiento real. Y sin diafragma, con solo el acople puntual de los puntales reales, la masa sísmica queda repartida en un número enorme de modos locales casi idénticos entre sí (cada pórtico vibrando casi independiente) — juntar el 90% exigiría un orden de magnitud más de modos que los probados, sin viabilidad de tiempo de cálculo ni ganancia real de información de diseño frente al estático.
+
+**Decisión**: se descarta el método dinámico modal-espectral para este proyecto. Se vuelve al **método estático** (Cap. 6), admitido directo por el reglamento para esta altura (<9m, sin necesidad de chequear regularidad de Tabla 2.5) y más representativo del comportamiento real de un diafragma flexible con pórticos casi independientes (reparto por área de influencia, sin redistribución artificial entre pórticos). La sección "Método dinámico" de arriba queda como referencia para un proyecto futuro con diafragma rígido/semirrígido real (losa, entrepiso).
+
+## Distorsión horizontal de piso (Art. 6.4.2) — verificado en X (28/08), PASA
+
+Pórtico interior (nodos 66/68/69/71/74, Y=-24), de aislado (LC34, sin mezclar con gravedad — importante: de es el desplazamiento del caso sísmico puro, NO de una combinación con D+S, que arrastra un desplazamiento lateral propio grande por la asimetría nave+alero en voladizo).
+
+de,68=13,5mm → du=Cd·de/γr=3×13,5/1,3=31,15mm → θsk=du/hsk=31,15/5850=**0,00532** — límite Tabla 6.4 Grupo A Condición D = 0,01. **Pasa con margen ~1,9x.**
+
+LC36 (dir. −X) verificado como exactamente el negativo de LC34 en ambos nodos — confirma que no hay error de carga en esa dirección.
+
+**Y — verificado (28/08), PASA con menos margen que X.** A diferencia de X (pórtico continuo, un solo tramo), en Y el sistema cambia de tipo a los 3m (H°A° abajo, arriostramiento de acero arriba) — se chequea por tramo, en el pórtico de punta (Y=-43,2, donde está el arriostramiento real):
+
+- Tramo 1 (0→3m, H°A°): θsk=0,00146 (derecha) / 0,00169 (izquierda).
+- Tramo 2 (3→5,85m, acero): θsk=0,00713 (derecha) / **0,00761 (izquierda, gobierna)**.
+
+Límite 0,01 (Grupo A, Cond. D) — pasa con margen ~1,3x (más ajustado que el 1,9x de X; revisar de nuevo si cambian secciones de diagonales).
+
+**Hallazgo aparte (no es falla de deriva, es informativo)**: el nodo de cumbrera del mismo pórtico (114) da de=46,7mm en Y (du amplificado ≈107,7mm) — mucho más que los eaves (~11mm), porque está a mitad de tramo sin arriostramiento directo. No es un punto que entre en el chequeo de Art. 6.4 (compara una misma ubicación en planta entre alturas, no dos puntos a la misma altura), pero confirma otra vez el comportamiento de diafragma flexible — dato a tener en cuenta para la conexión de correa de cumbrera o si se evalúa arriostramiento de techo adicional a mitad de largo.
+
+**Pendiente**: el pórtico de punta en X (probablemente no gobierna dado el margen amplio del interior, pero no confirmado formalmente).
+
+## Efecto P-Delta (Art. 8.4.4) — verificado (28/08), NO APLICA
+
+CE=(Pk·de·γr)/(Vk·hsk) — Cd se cancela algebraicamente (aparece en du y de nuevo en el denominador), no hace falta para este cálculo. Pórtico de punta, dirección Y (el caso más exigido de deriva):
+
+- Vk=52,279 kN — reacción de apoyo en Y de todo el pórtico aislado (columnas+arriostramiento), bajo LC35 puro. Mucho mayor que la carga local aplicada ahí (20,27 kN) — confirma que este pórtico recibe carga transferida desde los interiores vía correas/puntales, coherente con todo lo demás.
+- Pk≈156 kN (tributaria nave+alero de este pórtico, estimada).
+- Tramo 2 (acero, de=8,8mm, hsk=2850mm): **CE=0,0120**.
+- Tramo 1 (H°A°, de=1,9mm, hsk=3000mm): CE≈0,0025.
+
+Ambos muy por debajo del umbral 0,10 — **P-Delta no aplica a este proyecto**, ni con margen de error grande en la estimación de Pk.
+
 ## Pendientes por cerrar (no dar por completo el cálculo sin esto)
 
-- **Fórmula de magnitud de Ev**: la ec.3.18 solo define E=EH+EV, no da el valor de Ev — buscar en el reglamento (probablemente cerca del Cap.6, junto a las ecuaciones de C).
-- **Art. 6.3(a)**: acción sísmica vertical específica para voladizos/balcones/aleros — aparte de Ev general, verificación puntual para cualquier voladizo de cubierta.
+- **Arriostramiento anti-torsión del pórtico (nodo correa-pórtico) — era un error de modelado, no un gap real (corregido 28/08)**: se había liberado los 3 giros de las correas (My+Mz+torsión) asumiendo que la conexión real (clip/ménsula) no transmite ningún momento. Se investigó en fuentes (SCI, AISC/steelconstruction.info, AISI Design Guide, papers de rigidez rotacional correa-chapa) y la conexión real SÍ aporta restricción torsional — es el mecanismo por el que la correa arriostra el ala comprimida del cabio contra pandeo lateral-torsional. Liberar las 3 le sacaba esa restricción al modelo, generando matriz singular en el nodo del pórtico (nodo 581, y análogo en 131) — no era falta de arriostramiento real. Se había puesto un apoyo puntual restringiendo solo φy como parche numérico; **fix correcto**: liberar SOLO el momento de flexión de eje mayor de la correa (My en este proyecto — confirmado con la orientación del eje local), dejar Mz y torsión rígidos. El apoyo puntual parche queda innecesario una vez aplicado esto — sacarlo para no duplicar restricciones.
+
 - **Junta de separación sísmica tribuna-edificio**: confirmar que está prevista en el proyecto (condición para que f1×L≈0 sea válido).
-- **Torsión accidental (Tabla 6.3)**: 0%/5%/10% según regularidad en planta (Tabla 2.3) — pendiente de clasificar con la geometría en planta completa (el volumen adosado más bajo genera asimetría a revisar).
-- **Rigidez de diafragma (8.2.1)**: techo de chapa sobre reticulado — **asumido FLEXIBLE como hipótesis de precálculo** (no rígido), sin demostración formal todavía. Permite diseñar cada pórtico por área de influencia sin torsión entre pórticos, y además exime del cálculo de los casos torsionales de viento (ASCE 7 Apéndice D — exención requiere h≤9,1m, que ya se cumple, + diafragma flexible). Confirmar en el cálculo definitivo antes de dar por buena la exención.
+- **Torsión accidental (Tabla 6.3) — NO APLICA, confirmado por texto del reglamento (28/08)**: Art. 8.2.1.2 (Diafragma totalmente flexible) es explícito: *"cada uno de los elementos verticales se diseñará para las acciones correspondientes a su área de influencia y **no se considerarán torsiones**"*. Con diafragma flexible confirmado (ver punto siguiente), la torsión accidental queda formalmente eximida — no hace falta Tabla 6.3 para este proyecto.
+- **Rigidez de diafragma (8.2.1) — criterio del reglamento (28/08)**: Art. 8.2.1.2 define diafragma totalmente flexible si "la máxima deflexión horizontal propia excede el doble del promedio de los desplazamientos relativos (del nivel) de los dos elementos verticales que menos se desplazan" — verificación formal con deflexiones todavía pendiente, pero hay evidencia indirecta fuerte a favor: la participación de masa modal estancada incluso a 80-90 modos (chapa sobre reticulado sin diafragma real) y la literatura (AISC 2008, steel deck sin topping con pórticos arriostrados = diafragma flexible por tipología). Mismo artículo habilita la exención de torsión de arriba.
+- **Metodología de reparto validada contra el reglamento (28/08)**: Art. 6.2.4.1 confirma que Fk se aplica "en el baricentro de la carga gravitatoria Wk ubicada en el nivel k" (exactamente el hk-CG que sacamos de RFEM). Art. 6.2.4 remite el reparto entre elementos resistentes al Capítulo 8, no a una fórmula manual del Cap. 6. Art. 8.2.1.2 exige reparto por área de influencia para diafragma flexible (lo que ya veníamos haciendo, per pórtico). Art. 8.1.1 confirma que el análisis elástico lineal estándar (dejar que RFEM reparta internamente entre correas/arriostramiento/pórticos de H°A° vía su rigidez real) es el método aceptado — no hace falta un Master Node/Rigid Link para forzar el reparto a mano, sería agregar una rigidez artificial no prevista por el reglamento ni por la estructura real.
 - **Fundaciones (Cap.9)**: arriostramiento de bases — pendiente para etapa de detallado.
 
 ## RFEM
