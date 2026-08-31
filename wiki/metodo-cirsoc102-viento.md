@@ -2,7 +2,7 @@
 name: metodo-cirsoc102-viento
 description: Metodología para determinar y aplicar carga de viento según CIRSOC 102-25, con RFEM como herramienta.
 status: ESTABLE
-last_updated: 2026-08-20
+last_updated: 2026-08-31
 ---
 
 # Carga de viento — CIRSOC 102-25
@@ -59,3 +59,11 @@ ASCE 7 tiene provisión específica (Fig. stepped roofs, C&C) — la presión en
 - Correas: modelar como barras (transferencia de carga real + arriostramiento lateral contra pandeo de cordón/dintel). Simplemente apoyadas para precálculo (más simple, resultado conservador, evita cargas parciales del Cap.5 de nieve). Continuas = más eficiente en material pero exige más cálculo — decisión para etapa de cálculo definitivo.
 - Chapa: solo como carga (peso propio + generación de superficie para wizards), nunca como elemento estructural resistente, salvo diseño explícito de diafragma de chapa (stressed-skin), que es método especializado aparte.
 - Correa apoyada sobre ala de perfil: para precálculo, modelar coincidiendo con el eje del dintel es la práctica estándar (no un atajo cuestionable). La excentricidad real se puede agregar después con la función "member eccentricity" de RFEM cuando el detalle de conexión esté definido.
+
+## Direcciones 0°/90° vs. 180°/270° — no siempre hace falta el caso "espejado"
+
+El **Envelope Procedure** de ASCE 7 (Cap. 28, el que usa el Wind Load Wizard) está construido para que, en edificios razonablemente simétricos respecto a un eje, **no haga falta generar el caso de dirección opuesta (180°/270°) por separado** — el efecto de dirección ya queda contemplado dentro del propio patrón de coeficientes de cada caso (Case 1/2/3/4, con W1/W2 y ±GCpi). Confirmado el 31/08 en una consulta puntual: no es una limitación del wizard, es el procedimiento en sí (a diferencia del Directional Procedure, donde sí se verifican direcciones por separado).
+
+**Condición para que esto sea válido**: que el edificio sea razonablemente simétrico respecto al eje en cuestión (ej. para viento paralelo a cumbrera, que los dos frentes/cabeceras sean parecidos entre sí). Si hay una asimetría real (una cabecera con portón grande y la otra sin abertura, por ejemplo), esta simplificación no se puede dar por válida sin revisarla.
+
+**Paredes laterales (paralelas a la dirección del viento) — succión en las DOS, no presiones opuestas**: es un error común esperar que si una pared lateral tiene succión, la del otro lado tenga presión (sentido contrario) — no es así. Windward: presión (Cp≈+0,8). Leeward Y ambas paredes laterales: succión (Cp≈-0,2 a -0,7 según la zona), **mismo signo en las dos paredes laterales**, no antisimétrico — el flujo se separa en las esquinas de barlovento y "tira hacia afuera" de las dos caras paralelas al viento por igual. Con geometría escalonada real (ej. un alero pegado de un solo lado, como en este proyecto), la succión real puede diferir en *magnitud* entre ambas paredes laterales por interferencia aerodinámica — pero el wizard (pensado para prismas rectangulares simples) no captura esa diferencia; es una simplificación aceptada para precálculo, no un error del método.

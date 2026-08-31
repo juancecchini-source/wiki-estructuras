@@ -2,7 +2,7 @@
 name: metodo-inpres-cirsoc103-sismo
 description: Metodología de carga sísmica según INPRES-CIRSOC 103 Parte I, incluye combinación de acciones (Art. 3.7), fórmula de Ev (Art. 3.5.2). Método dinámico modal-espectral evaluado y DESCARTADO para este proyecto (28/08) — se vuelve al método estático. Ver sección "Cierre del método dinámico" y Pendientes al pie.
 status: ACTIVO
-last_updated: 2026-08-28
+last_updated: 2026-08-31
 ---
 
 # Carga sísmica — INPRES-CIRSOC 103 Parte I
@@ -143,6 +143,8 @@ Ambos muy por debajo del umbral 0,10 — **P-Delta no aplica a este proyecto**, 
 - **Rigidez de diafragma (8.2.1) — criterio del reglamento (28/08)**: Art. 8.2.1.2 define diafragma totalmente flexible si "la máxima deflexión horizontal propia excede el doble del promedio de los desplazamientos relativos (del nivel) de los dos elementos verticales que menos se desplazan" — verificación formal con deflexiones todavía pendiente, pero hay evidencia indirecta fuerte a favor: la participación de masa modal estancada incluso a 80-90 modos (chapa sobre reticulado sin diafragma real) y la literatura (AISC 2008, steel deck sin topping con pórticos arriostrados = diafragma flexible por tipología). Mismo artículo habilita la exención de torsión de arriba.
 - **Metodología de reparto validada contra el reglamento (28/08)**: Art. 6.2.4.1 confirma que Fk se aplica "en el baricentro de la carga gravitatoria Wk ubicada en el nivel k" (exactamente el hk-CG que sacamos de RFEM). Art. 6.2.4 remite el reparto entre elementos resistentes al Capítulo 8, no a una fórmula manual del Cap. 6. Art. 8.2.1.2 exige reparto por área de influencia para diafragma flexible (lo que ya veníamos haciendo, per pórtico). Art. 8.1.1 confirma que el análisis elástico lineal estándar (dejar que RFEM reparta internamente entre correas/arriostramiento/pórticos de H°A° vía su rigidez real) es el método aceptado — no hace falta un Master Node/Rigid Link para forzar el reparto a mano, sería agregar una rigidez artificial no prevista por el reglamento ni por la estructura real.
 - **Fundaciones (Cap.9)**: arriostramiento de bases — pendiente para etapa de detallado.
+- **Dirección -Y no se modeló como combinación separada — decisión deliberada, no un gap (confirmado y CERRADO 31/08)**: solo existen LC34(+X)/LC36(-X)/LC35(+Y) — no hay una LC ni una combinación para -Y, a propósito. Los tensores/diagonales de arriostramiento son los mismos en todo el techo/paredes (mismo Member Representative, ver `rfem-gotchas.md`), así que el máximo esfuerzo que salga de +Y ya cubre a su "espejo" bajo -Y, porque terminan con la misma sección. **Confirmado por Juan (31/08): el arriostramiento está en los DOS extremos de la nave (simétrico)** — con eso, tanto el tensor como el chequeo de vuelco de bases [3.17] quedan cubiertos con +Y solo, sin necesidad de -Y explícito. No queda nada pendiente en este punto.
+- **Bug de tipeo encontrado y CORREGIDO (31/08)**: CO11 (3.16 -X) y CO12 (3.16 +Y) tenían el término sísmico (LC36 y LC35 respectivamente) con factor 0,2 en vez de 1,0 — subestimaba el sismo 5x en esas dos combinaciones puntuales. Confirmado contra el texto real del reglamento (línea 2381 del PDF): *"1,20 D ± 1,00 E ± f1 L ± f2 S [3.16]"* — f2 multiplica solo a S (nieve), E siempre lleva coeficiente 1,00. Corregido en RFEM y verificado en el Excel exportado post-fix: CO10/CO11/CO12 ahora con factor 1,0 en el término sísmico, correctas las tres.
 
 ## RFEM
 
