@@ -2,7 +2,7 @@
 name: rfem-gotchas
 description: Comportamientos no obvios de RFEM 6 descubiertos en la práctica. Revisar antes de arrancar un modelo nuevo.
 status: ACTIVO
-last_updated: 2026-08-31
+last_updated: 2026-09-01
 ---
 
 # RFEM — gotchas y comportamientos no obvios
@@ -16,6 +16,39 @@ last_updated: 2026-08-31
 - Tabla "Generated on Members/Surfaces/Lines No.", columna "Loaded": si queda vacía, la carga NO se distribuye a los elementos — se queda como bloque de superficie sin repartir, sin aviso de error. Hay que seleccionar ahí explícitamente qué miembros reciben la carga.
 - No confundir "Without Load Parallel to" (excluye un miembro puntual de recibir carga aunque esté en el plano) con la selección de "Loaded" (sin la cual no hay redistribución en absoluto) — son pasos distintos, hace falta hacer ambos.
 - El wizard NO genera automáticamente: presión de voladizo de cubierta (Art. 5.11.4, Cp=0,8 en cara inferior) ni zonas especiales de techo escalonado — cargar manual.
+
+### Las dos tablas de checkboxes hacen cosas distintas (01/09)
+
+Confundirlas cuesta caro — en este proyecto se destildó la dirección equivocada y quedó una pared tapada recibiendo presión de barlovento como si estuviera libre:
+
+- **"Set Wind Perpendicular to"** → *"You can use the check boxes to control which directions are relevant for load generation"*: define **qué direcciones se evalúan** y, por lo tanto, qué Load Cases se crean. Destildar una fila acá **no protege ninguna pared**: solo elimina ese caso de viento entero.
+- **"Set Loaded Wall/Roof"** → *"you can use the check boxes to exclude wall or roof sides from load assignment"*: define **qué caras reciben carga** dentro de los casos que sí se generan. Es la única forma de que una cara tapada por otra estructura no reciba viento.
+
+Corolario para un volumen a la sombra de otro: para que reciba sus succiones de sotavento hay que **habilitar esa dirección** en su wizard (si no, el caso no existe), y por separado **destildar la cara compartida** en "Set Loaded Wall/Roof".
+
+### No deja tildar dos direcciones opuestas (0° y 180°) en la misma entrada (01/09)
+
+Asume el Envelope Procedure, donde un sentido por eje alcanza en edificios simétricos. Con un volumen adosado esa simetría no existe y hacen falta los dos sentidos: **duplicar la entrada del wizard** (íconos del panel "List") y dejar una entrada por sentido. En la copia hay que **destildar en la pestaña "Load Cases" las filas de las direcciones que ya genera la entrada original**, o esas cargas se generan dos veces sobre los mismos LC.
+
+### "Without Load" REDISTRIBUYE la carga, no la descarta (01/09 — verificado en el modelo)
+
+El manual no lo aclara, y la intuición es la contraria. Al excluir miembros del reparto (columna "Without Load" / "Remove influence from members"), **la parte de carga tributaria de esos miembros se reparte entre los miembros que quedan** — no se descarta. Verificado sumando las cargas de los miembros de una pared: el total daba proporcional a la pared COMPLETA, no a la franja realmente expuesta.
+
+Consecuencia: **no sirve para cargar solo una parte de una pared** (ej. la franja que sobresale por encima de una construcción adosada). Si se usa así, infla la carga de los miembros restantes. Para cargar una porción real de pared: destildar la pared entera en "Set Loaded Wall/Roof" y cargar la franja a mano con **Free Rectangular Load**, usando el valor de presión que el propio wizard le había asignado a esa pared (leerlo antes de destildarla).
+
+**Cómo verificarlo en cualquier modelo**: exportar Member Loads a Excel y sumar la carga de los miembros de esa cara. Si el total ≈ presión × área completa → redistribuyó. Si ≈ presión × área expuesta → descartó.
+
+### Cargas huérfanas de iteraciones viejas — revisar antes de auditar nada (01/09)
+
+Aparecieron 40 entradas de **"Member Loads from Area Load"** (wizard distinto al de viento, categoría aparte en el navegador) con 0,15 kN/m² uniforme hacia abajo, metidas en TODOS los LC de viento — resto de una iteración anterior, sin ninguna decisión documentada detrás. Contaminaban cualquier auditoría de signos o sumas.
+
+Señales de que una carga es residuo y no algo legítimo:
+- Aparece **idéntica en los LC +Cpi y −Cpi** (cualquier componente ligada a presión interna cambia entre esas familias).
+- Es **físicamente imposible** para el caso (uniforme hacia abajo sobre todo el techo, cuando con la pendiente del proyecto todas las zonas dan succión).
+- Apunta a **LC vacíos o sin uso** (señal de que se creó para un layout de LC anterior).
+- **No hay ninguna decisión documentada** en la wiki ni en el historial que la respalde.
+
+Revisar el navegador **Load Wizards** completo (no solo "Wind Loads") antes de dar por buena una auditoría de cargas.
 
 ## Snow Load Wizard
 
@@ -72,6 +105,32 @@ El generador automático de **Action Combinations** (pestaña del mismo nombre e
 Con esto, el generador nunca combina dos de esas cargas en la misma combinación — quedan como alternativas mutuamente excluyentes, no sumables. Asignar la relación a la Design Situation correspondiente (campo "Assignment to Design Situations" en el mismo diálogo).
 
 **Aun así, las combinaciones de sismo que arma el generador quedan con 1,20D/0,90D genérico, sin el plegado de Ev específico de INPRES-CIRSOC** (nuestro 1,278/0,822) — son válidas en su forma pero menos precisas, y en el lado de 0,9D son *menos* conservadoras que las nuestras para chequeos de arrancamiento (0,90D+E tiene más D disponible que 0,822D+E). Mejor borrarlas después de generar y quedarse solo con las combinaciones de sismo armadas a mano.
+
+**Y vuelven a aparecer cada vez que se regeneran las combinaciones** (confirmado el 01/09: tras regenerar por LC de viento nuevos, reaparecieron ~100 COs genéricas de sismo). No es un error nuevo, es el mismo mecanismo de §2.3.1 — pero hay que acordarse de borrarlas otra vez después de **cada** regeneración. No son peligrosas: las manuales son más exigentes en ambos lados (más D para compresión, menos D para arrancamiento) y gobiernan igual.
+
+## Action Type de una Action — "Alternatively" resuelve viento sin relaciones a mano (01/09)
+
+El campo **Action Type** (Actions → la Action → pestaña Main) define cómo se superponen las Load Cases de esa Action:
+
+- **Simultaneously**: todas pueden actuar juntas en una misma combinación.
+- **Alternatively**: *"Only one of the load cases of the action can be effective in the combination. **This is the case, for example, with wind from different directions.**"*
+- **Differently**: control mixto por grupos (habilita la columna "Group" en Assignment — ver receta de nieve más abajo).
+
+**Para viento no hace falta armar ninguna relación Exclusive a mano** — el manual lo dice en un recuadro Tip: *"Load cases of the 'Wind' action category are generally applied as alternatively acting. You do not need to define any mutually exclusive criteria for them."* Verificado en este proyecto con 31 LC de viento: 0 combinaciones con dos vientos simultáneos.
+
+Es la diferencia con sismo, donde sí hizo falta la relación par por par: ahí el problema era que varias LC quedaban bajo una Action sin ese tratamiento alternativo. Antes de ponerse a cargar N filas de exclusividad, **mirar primero el Action Type** — puede que ya esté resuelto.
+
+Al agregar LC nuevos a una Action existente: verificar en la pestaña **Assignment** que estén efectivamente en la lista de asignados. Si quedan afuera, no reciben el tratamiento alternativo ni entran a ninguna combinación (se detecta rápido contando en cuántas COs aparece cada LC — un LC huérfano da 0).
+
+Fuentes: [Actions | RFEM 6](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6/000251), [Load Case Relations | RFEM 6](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6/002930).
+
+## Export de Nodos — "Coordinates" (F/G/H) NO es lo mismo que "Global Coordinates" (I/J/K) (01/09)
+
+En la tabla de Nodos exportada a Excel hay dos bloques de coordenadas. Para nodos **"Standard"** con sistema "1 - Global XYZ" coinciden, pero para nodos **"On Member"** o con un sistema de referencia propio (ej. "2 - 3 Points | ..."), las columnas **F/G/H son coordenadas LOCALES** de ese sistema — pueden dar una geometría completamente falsa.
+
+Caso real: leyendo F/G/H, un nodo del alero parecía estar en Y=+43,2 cuando el resto del edificio va de 0 a −43,2 — parecía un nodo espejado al otro lado del edificio y estuvo a punto de reportarse como bug de modelado. En **Global Coordinates (I/J/K)** estaba en Y=−43,2, perfectamente correcto.
+
+**Usar siempre I/J/K para cualquier verificación geométrica** (orden de nodos, sentido de giro, normales de pared, orientación de cumbrera).
 
 ## Materiales
 
