@@ -28,6 +28,12 @@ last_updated: 2026-09-02
 
 > Ojo con la trampa de las correas: el conformado en frío se verifica por CIRSOC 303, cuyo art. A.2.1 admite **solo normas IRAM-IAS**. Ver `metodo-cirsoc301-acero.md`, sección de perfiles conformados en frío.
 
+## Fuente de propiedades de perfiles C/PC (conformados en frío) — dónde buscar
+
+RFEM no trae una librería IRAM-IAS completa de perfiles C. Cuando hace falta un tamaño que no está cargado en el modelo, la fuente que dio buenos resultados (02/09, validada por control cruzado contra un perfil ya verificado, ver `calculo-polideportivo-anelo.md`) es la ficha técnica pública **Siderar/Ternium "Perfiles conformados — Valores estáticos relativos a los ejes XX-YY"** (v.01, mayo 2007), encontrada por búsqueda web — cubre toda la serie de 80x40 a 240x80 con área, peso, Wx/Jx (eje fuerte) y Wy/Jy (eje débil). Ojo con la nomenclatura de esa ficha: llama **"I" al radio de giro**, no al momento de inercia (el momento de inercia es "J").
+
+**Distintos fabricantes redondean el labio distinto** para el mismo salto de h/b — ej. Siderar cataloga 180x70 con labio 20mm, Tubocenter con labio 25mm. Confirmar con el proveedor real qué geometría se consigue antes de comprar.
+
 ## Decisión práctica
 
 No hay opción "correcta" única — depende de disponibilidad/costo local. Para el precálculo, correr con la opción más económica/disponible primero (F-24 o el material default de la zona) y comparar tonelaje contra la alternativa de mayor resistencia si la diferencia de peso parece significativa. CIRSOC 301 remite a IRAM/IRAM-IAS, no directo a ASTM — confirmar designación IRAM certificada con el proveedor real antes de comprar.
