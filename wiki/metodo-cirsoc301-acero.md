@@ -48,11 +48,37 @@ Buscado en el texto completo del CIRSOC 301-18 y del CIRSOC 303 el 02/09. **No e
 
 **Consecuencia práctica**: el valor que RFEM aplique acá (L/200 por default) **no sale del reglamento** — es un default del software. Es una decisión de proyecto que hay que tomar y justificar, y no es menor: en un caso real (Añelo, correa de pared) mover el criterio entre L/120 y L/200 cambió el η de 1,04 a 1,73, o sea decidía sola qué perfil comprar.
 
-**Criterio recomendado: L/150**, por convergencia de las dos analogías más cercanas dentro de la propia Tabla L.3.1 — que dan el mismo número por caminos independientes:
-1. **"Miembros soportando cubiertas flexibles: L/150"** (edificios industriales) — analogía por el tipo de revestimiento soportado: un panel metálico es un cerramiento flexible, tolera deformación sin fisurar. Es la fila que trata *"elemento que soporta un revestimiento liviano"*.
-2. **"Desplazamiento de columnas respecto a la base por acción de viento: H/150"** (edificios industriales) — analogía por la acción: es la única fila del reglamento que fija cuánta deformación lateral por viento se acepta en un edificio industrial.
+**Criterio adoptado: L/120 con viento de 10 años (0,7W)** — de **AISC Design Guide 3, *Serviceability Design Considerations for Steel Buildings*, 2ª ed.**, que es documento de apoyo del AISC 360 en el que se basa el CIRSOC 301-18 (ver el lineamiento de jerarquía de fuentes en `normativa-vigente.md`). Texto exacto:
 
-Documentar el criterio adoptado **con su porqué** y, si el fabricante del revestimiento fija uno más exigente, ese manda (L.3 lo habilita expresamente).
+> *"For the design of girts and wind columns supporting metal wall panel systems a deflection limit of **span divided by 120 using ten-year wind loading** is recommended for both girts and wind columns. The wind loading should be based on either the 'component and cladding' values using ten-year winds or the 'component and cladding' values (using the code required 'basis wind speed') **multiplied by 0.7**, as allowed in footnote f in IBC 2003, Table 1604.3…"*
+
+**Los dos números van juntos y no se pueden separar**: L/120 es admisible *porque* se verifica con el viento de 10 años, no con el de 50 años del diseño de resistencia. Tomar L/120 con W pleno sería demasiado permisivo, y L/200 con W pleno (el default de RFEM) es doblemente conservador — exige más flecha *y* la mide con más viento.
+
+Si el fabricante del revestimiento fija un límite más exigente, ese manda (L.3 del 301 lo habilita expresamente).
+
+> **Descartado**: por analogía dentro de la Tabla L.3.1 se puede llegar a L/150 (las filas "miembros soportando cubiertas flexibles" L/150 y "desplazamiento de columnas por viento" H/150 convergen ahí). Es defendible, pero **queda superado por el DG3**, que trata exactamente este elemento en vez de razonar por analogía, y que además fija con qué viento medirlo. Anotado para no volver a recorrer el mismo camino.
+
+### Perfiles conformados en frío: el material y el método NO son los del 301
+
+Tres cosas a chequear cada vez que RFEM verifique un perfil conformado en frío (correas, C, U, Z), porque los defaults del software no coinciden con el marco argentino:
+
+**1. El acero tiene que ser una norma IRAM-IAS, no ASTM.** El artículo A.2.1 del CIRSOC 303 lista exclusivamente normas **IRAM-IAS** (U 500-42, 500-72, 500-131, 500-205-x, 500-206-x, 500-503…). No admite ASTM. Si RFEM tiene puesto **A572 Gr.50 "HR Structural Shapes and Bars"** hay dos errores encima: es una designación **ASTM**, y es de un producto **laminado en caliente** aplicado a un perfil **conformado en frío**.
+
+**Y no es cosmético — el Fy cambia el resultado.** El acero de referencia del ejemplo oficial del CIRSOC 303 es **F24, Fy = 235 MPa**; el A572 Gr.50 que trae RFEM tiene **Fy = 344,7 MPa**. Son **47% de resistencia a flexión de diferencia**, y en el sentido inseguro. Confirmar con el proveedor qué chapa se usa realmente (F24 = 235; los galvanizados estructurales tipo ZAR llegan a 340) **antes** de cerrar cualquier sección.
+
+*Lo que sí suele estar bien*: E = 200.000 MPa. El 303 lo fija explícitamente (*"a los efectos del cálculo, en el Reglamento se utiliza un valor de 200.000 MPa"*) y coincide con el E del A572 en RFEM (29.000 ksi ≈ 199.950). Ojo si alguien elige un acero europeo (S235/S355), que en RFEM viene con **210.000 MPa** — ahí las flechas salen ~5% menores de lo que el reglamento admite.
+
+**2. El método de RFEM no es el del CIRSOC 303.** RFEM verifica por **AISI S100-16 / Direct Strength Method** (se lo reconoce en el Design Check Details por los "Applicability Limits Acc. to Tab. B4.1-1" y por la ausencia de anchos efectivos). El CIRSOC 303-2009 usa el **método de anchos efectivos** del AISI S100 clásico (Cap. B: `be`, λ, ρ). Dan resultados parecidos pero no idénticos, y **el que hay que poder mostrar en una memoria argentina es el del 303**. Para un precálculo de cotización el DSM sirve; para el cálculo definitivo, no.
+
+**3. "Sección totalmente efectiva" NO es una propiedad del perfil solo.** Es la pregunta de si hay pandeo local, y depende del acero: el criterio del 303 es λ ≤ 0,673 con
+
+> λ = √(f / Fcr) , Fcr = k·π²E / [12(1−μ²)] · (t/b)²   *(Ec. B.2.1-4 y B.2.1-5)*
+
+`Fcr` es pura geometría, pero **`f` es la tensión actuante, que para resistencia vale Fy**. O sea λ escala con **√Fy**: un perfil totalmente efectivo con F24 puede dejar de serlo con un acero de mayor grado. **Por eso no existe —ni puede existir— un listado de perfiles "sin pandeo local" válido en general**: solo tiene sentido *para un acero dado*.
+
+Lo que sí es puramente geométrico, y conviene mirar primero como filtro rápido, son los límites del Cap. B.1: **Tabla B.1-1** (máxima relación be/b según L/bf, del *shear lag* en alas anchas) y **B.1.2** (h/t ≤ 200 en almas no rigidizadas).
+
+**Por qué vale la pena verificarlo igual**: si el perfil resulta totalmente efectivo, `Se = S` y la resistencia sale directo (`Ma = φb·S·Fy`, φb=0,90) sin iterar anchos efectivos — se puede comparar secciones a mano, en una planilla, sin depender del software. Y la verificación es barata: alcanza con escalar el λ publicado por √(Fy_nuevo/Fy_ejemplo).
 
 ### Con qué carga se verifica el ELS — no es la combinación de resistencia
 

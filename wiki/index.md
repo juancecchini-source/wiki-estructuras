@@ -14,7 +14,7 @@ last_updated: 2026-09-02
 - `metodo-cirsoc101-sobrecargas.md` — ESTABLE. Sobrecarga de mantenimiento de cubierta (CIRSOC 101-25, Art. 4.8.1), cubiertas livianas/pesadas, fórmula Lr=0,45·R1·R2.
 - `metodo-inpres-cirsoc103-sismo.md` — ACTIVO (en desarrollo). Metodología de carga sísmica, método estático, R para sistemas mixtos. Faltan puntos por cerrar — ver el archivo.
 - `metodo-cirsoc301-acero.md` — ACTIVO. Diseño de acero (CIRSOC 301-18 / AISC 360-2010), configuración correcta de Steel Design en RFEM: límites de flecha reales (Tabla L.3.1) y por qué "Seismic Configuration (OMF)" no corresponde a INPRES-CIRSOC 103.
-- `normativa-vigente.md` — ACTIVO. Estado de vigencia de cada reglamento CIRSOC, con fecha de última verificación. Revisar antes de arrancar un proyecto nuevo.
+- `normativa-vigente.md` — ACTIVO. Estado de vigencia de cada reglamento CIRSOC, con fecha de última verificación, y **el lineamiento de jerarquía de fuentes** (qué hacer cuando el CIRSOC no cubre el caso). Revisar antes de arrancar un proyecto nuevo.
 - `rfem-gotchas.md` — ACTIVO. Comportamientos no obvios del software (wizards, add-ons, visualización).
 - `rfem-buenas-practicas.md` — ACTIVO. Prácticas recomendadas por Dlubal para cualquier proyecto: verificación de modelo (Model Check/Plausibility Check), **verificación de orientación/rotación de secciones**, tolerancias, equilibrio global, mallado FE, reducción de combinaciones, backups/versionado.
 - `materiales-perfiles.md` — ESTABLE. Equivalencias W/A992 vs IPN-UPN/F24-F36.
