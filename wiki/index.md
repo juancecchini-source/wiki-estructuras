@@ -21,6 +21,7 @@ last_updated: 2026-08-31
 
 ## Proyectos (viven mientras dura el proyecto, después pasan a HISTORICO)
 
+- `calculo-polideportivo-anelo.md` — ACTIVO. **Los números calculados de Añelo** (pesos adoptados, W, V₀, Fk, η). Buscar acá antes de volver a medir algo en RFEM.
 - `proyecto-polideportivo-anelo.md` — ACTIVO. Polideportivo en Añelo, Neuquén — precálculo para cotización.
 
 ## Changelog

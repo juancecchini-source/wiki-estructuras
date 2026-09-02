@@ -55,84 +55,23 @@ W = D + f1×L + f2×S. Para este proyecto puntual:
 - **D**: resuelto (autopeso real LC1 + peso de cerramiento LC30, ya modelados).
 - **f2×S**: **resuelto y armado en RFEM** (02/09). Se usaron los **casos balanceados directos** (LC23 nave + LC29 alero) al 0,20, **no** la envolvente RC1 que se había propuesto conceptualmente. Es la elección correcta y no una simplificación: para masa sísmica interesa la nieve **esperable** durante el sismo, no el máximo de acumulación/arrastre/deslizamiento, que es un caso de dimensionado y no un estado de carga probable.
 
-### Las dos combinaciones de peso sísmico (medidas 02/09)
-
-Son el insumo de todo lo demás — de acá salen W y V₀, así que quedan registradas acá y no hay que volver a medirlas:
-
-| CO | Nombre en RFEM | Composición | Σ reacciones Z |
-|---|---|---|---|
-| **CO8** | `CC_W_sismico` | 1,05·LC1 + 1,05·LC30 + 0,20·LC23 + 0,20·LC29 | **1.787,18 kN** |
-| **CO9** | `CC_D_sismico` | 1,05·LC1 + 1,05·LC30 | **1.494,13 kN** |
-
-Desglose que se deduce de esos dos valores (no hace falta medirlo aparte):
-
-| Componente | kN |
-|---|---|
-| LC1 — autopeso de la estructura (sin mayorar) | 1.226,02 |
-| LC30 — cerramiento (sin mayorar) | 196,96 |
-| LC23 + LC29 — nieve balanceada total (sin factor) | 1.465,25 |
-
-**Estas mediciones corresponden al modelo con el cerramiento ya cambiado a panel y con las rótulas nuevas de correas y columnas de frontis ya aplicadas** (confirmado por Juan 02/09). Que el modelo haya cerrado equilibrio con esas rótulas confirma de paso que no quedó ningún mecanismo.
-
-### Coeficiente sísmico C — derivación verificada contra el reglamento (02/09)
-
-**C = 0,13**, calculado con **[6.3]** (no despejado de V₀/W). Texto del reglamento, Art. 6.2.2:
+### Coeficiente sísmico C (Art. 6.2.2) — se calcula, NUNCA se despeja
 
 - **[6.3]** `C = 2,5 · Ca · γr / R` — para **T ≤ T2**
 - **[6.4]** `C = Sa · γr / R` — para T > T2
+- **[6.5]** `C = 0,8 · as · Nv / R` — zonas sísmicas 3 y 4
 - **[6.6]** `C = 0,11 · Ca · γr` — mínimo para zonas sísmicas 0, 1 y 2
 
-Para este proyecto: **Ta = 0,225 s ≤ T2 = 0,6 s** → gobierna [6.3] (tramo de aceleración constante, no hace falta entrar al espectro).
+Si T cae en el tramo de aceleración constante (T ≤ T2) alcanza con [6.3] — no hace falta entrar al espectro.
 
-`C = 2,5 × 0,12 × 1,3 / 3 = 0,13`
+**No despejar C de V₀/W.** C depende de Ca, γr, R y T, no de W: despejarlo de un V₀ de otra época propaga cualquier error que ese V₀ traiga. Pasó en Añelo el 02/09 — el C despejado dio 0,2148 contra el 0,13 real, y el 65% de diferencia era en realidad un error de unidades en la carga de cerramiento que llevaba semanas sin detectarse.
 
-El mínimo de [6.6] da `0,11 × 0,12 × 1,3 = 0,017` — no gobierna, queda muy por debajo.
+**Cómo medir W en RFEM**: armar una Load Combination con la composición de [3.15] y leer su **Σ de reacciones en Z** (tabla `Summary`, filas `Sum of loads in Z` / `Sum of support forces in Z`, que deben coincidir con `Deviation: 0,00 %`). Conviene tener también la combinación solo-D por separado: la diferencia entre ambas da el término de nieve sin medirlo aparte.
 
-**No despejar C de V₀/W.** C es un coeficiente reglamentario que depende de Ca, γr, R y T — no de W. Despejarlo de un V₀ de otra época propaga cualquier error que tenga ese V₀ (fue exactamente lo que pasó el 02/09: dio 0,2148, un 65% de más).
+**Antes de dar por buena cualquier carga de superficie que entre en W**: `Σ reacciones Z del load case ÷ carga unitaria = superficie implícita`, comparada contra la superficie real. Es el chequeo que habría cazado el error de Añelo dos semanas antes.
 
-### V₀ corregido de 364,83 a 232,3 kN — causa confirmada (02/09)
+> **Valores de este proyecto** (W, C, V₀, Fk, pesos adoptados): están en **`calculo-polideportivo-anelo.md`**, no acá.
 
-**El modelo tenía cargado 0,64 kN/m² de cerramiento en vez de 0,06** — un error de unidades de factor 10, confirmado por Juan. Todo lo calculado hasta el 01/09 corrió con ~1.000 kN de peso propio inexistente.
-
-| | kN |
-|---|---|
-| Cerramiento erróneo: 1.876 m² × **0,64** | 1.200,6 |
-| W con ese error = 1,05·(1.226,02 + 1.200,6) + 293,05 | **2.841,0** |
-| V₀ que eso produce = 0,13 × 2.841,0 | **369,3** |
-| V₀ que estaba documentado y cargado en el modelo | 364,83 |
-
-La diferencia residual de 1,2% se explica porque el LC1 de entonces era ~1.193 kN contra los 1.226 de hoy (2,7%), compatible con los ajustes de sección hechos entre el 28/08 y el 01/09.
-
-**Valor correcto:**
-
-`V₀ = C × W = 0,13 × 1.787,18 = **232,3 kN**` — un **36% menos** que el que está cargado.
-
-**Consecuencias, separadas por si importan o no:**
-
-- **Hay que regenerar LC34 (E dir. X) y LC35 (E dir. Y)** con el V₀ nuevo. Hasta que eso pase, el modelo está 57% sobrecargado en sismo.
-- **La distorsión horizontal mejora mucho** (corte −36%): compensa de sobra el +5,2% de masa del panel y la pérdida de rigidez de las rótulas nuevas. Deja de ser un pendiente en riesgo.
-- **Las columnas casi no cambian**: están gobernadas por flexión de viento. El P de la columna del pórtico baja de −177,96 a ~−128 kN, pero la compresión pesa 0,03 sobre un η de 0,83.
-- **Sí cambian correas y reticulado**, que son los elementos gobernados por gravitatorias — es donde puede haber sobredimensionado real, y por eso importa para una cotización.
-- **La deriva ELS de 26,0 mm NO mejora**: es bajo DS2 con viento, y sacar peso propio no reduce el desplazamiento lateral por viento en un modelo geométricamente lineal. La causa sigue siendo la sección de H°A°.
-
-**Lección de proceso**: el archivo de proyecto decía 0,06 kN/m² mientras el modelo tenía 0,64. La documentación y el modelo estaban divergidos, y el error sobrevivió porque **nadie chequeó nunca la carga total contra la superficie**. El chequeo que lo habría detectado en 30 segundos: `Σ reacciones Z del load case ÷ carga unitaria = superficie implícita`, y comparar contra la superficie real. Hacerlo cada vez que se carga o se cambia una Surface Load.
-
-### Efecto del cambio de chapa a panel sobre W (02/09)
-
-El cerramiento pasó de **chapa 0,6mm (0,06 kN/m²)** a **panel Maxiroof PUR 50mm (0,105 kN/m²)**. Superficie de cerramiento implícita: 196,96 / 0,105 = **1.876 m²**.
-
-| | W (kN) |
-|---|---|
-| Con chapa (estado del 28/08) | 1.698,55 |
-| **Con panel (estado actual)** | **1.787,18** |
-
-**+5,2%**. El W anterior se reconstruyó escalando LC30 hacia atrás (1.876 m² × 0,06 = 112,55 kN), no se midió — vale mientras el autopeso de la estructura (LC1) no haya cambiado entre el 28/08 y hoy.
-
-**T no sale del modelo**: se usa Ta de la fórmula empírica con el tope de [6.7]. Consecuencia práctica: mientras no cambie la geometría, **C queda fijo en 0,13 y V₀ escala lineal con W**.
-
-**Decisión — el 1,05 sobre las cargas permanentes (confirmado por Juan 02/09)**: es un **mayorante del 5% sobre el peso propio** para cubrir lo que el modelo de barras no dibuja — chapas de nudo, bulones, soldadura. Aplicado consistente en CO8 y CO9. No es un factor reglamentario ni parte de la ecuación [3.15]: es un criterio de proyecto, y por eso queda escrito acá.
-
-**El período T no sale del modelo** — se calcula con la fórmula empírica y el tope de [6.7]. Consecuencia práctica importante: **si cambia la masa pero no la geometría, C no cambia y V₀ escala lineal con W** (`V₀_nuevo = 0,2041 × W_nuevo`), sin necesidad de rehacer nada del capítulo. Solo hay que recalcular T si cambia la altura o la tipología.
 - **Mampostería de cerramiento (0 a 3m) — no modelada, y está bien no modelarla para carga gravitatoria** (apoya en el suelo, no cuelga de la estructura). **Para W el criterio es otro y depende de la junta**: si existe junta de separación sísmica real entre la mampostería y las columnas, su masa inercial va a su propia fundación y **queda fuera de W**; si está en contacto, hay que incluirla **y** deja de ser solo un tema de masa (el relleno rigidiza el pórtico, atrae carga y puede generar columna corta). **Criterio adoptado (Juan, 02/09): se asume junta, con el mismo estatus que la junta de las gradas** — o sea, la mampostería queda **fuera de W**, condicionado a que la junta se confirme. Los dos pendientes (junta de mampostería y junta de tribunas) van juntos: si uno cae, hay que revisar los dos, porque sostienen la misma hipótesis de masas que no entran al sistema resistente. Nota adicional: aun con junta, la mampostería necesita vínculo lateral para su estabilidad fuera del plano, y esa fuerza de anclaje **sí** es una acción local sobre la estructura (misma lógica de Wi = Di + f1·Li + f2·Si aplicada al componente, ec. [3.15]).
 - **f1×L**: probablemente **≈0 para este proyecto** — las tribunas están apoyadas en el suelo con fundación propia, independientes de columnas/vigas/pórticos (no le transmiten masa sísmica al sistema resistente que se está diseñando), y todo el edificio es a nivel de suelo (sin entrepisos apoyados en la estructura). **Condición para que esto sea válido**: debe existir junta de separación sísmica real entre tribuna y edificio (evitar golpeteo/pounding) — confirmar que está contemplada en el proyecto.
 
@@ -146,15 +85,7 @@ El cerramiento pasó de **chapa 0,6mm (0,06 kN/m²)** a **panel Maxiroof PUR 50m
 
 Sin entrepisos pero con dos alturas de techo (nave vs. alero-vestuarios), tratar como **n=2 niveles de masa** para [6.11], cada uno con su Wk y su altura representativa (centro de gravedad del techo respectivo — aproximación razonable: promedio eave-cumbrera). Wk de cada zona se obtiene igual que W global: sumar reacciones de `CC_W_sismico` filtrando solo los nodos de esa zona.
 
-**Valores calculados (02/09, con V₀ = 232,3 kN):**
-
-| Nivel de masa | Fk (kN) | % de V₀ |
-|---|---|---|
-| Nave (pórtico) | **198,58** | 85,5% |
-| Alero (vestuarios) | **33,73** | 14,5% |
-| **Suma** | **232,31** | **100%** ✓ |
-
-La suma cierra contra V₀ — es el control que hay que hacer siempre después de aplicar [6.11], porque un error en las alturas representativas o en el reparto de Wk no se ve de otra forma.
+**Ojo con qué controla y qué no la suma de Fk.** Que `ΣFk = V₀` **no valida nada de los datos de entrada**: [6.11] normaliza por `Σ(Wi·hi)`, así que la suma cierra siempre, con cualquier reparto de Wk y cualquier hk. Solo confirma que la aritmética del reparto está bien hecha. Para validar los datos hay que contrastar los **Wk contra la superficie/masa real de cada zona**, y los **hk contra el baricentro** que da RFEM.
 
 **Reparto de Fk entre los pórticos de una misma zona**: por **masa tributaria** (ancho de paño de cada pórtico / ancho total de la zona, con ajuste de medio paño en los pórticos de punta), NO por rigidez relativa. Es la distribución correcta para diafragma flexible (cada pórtico resiste su propia masa, sin redistribución vía diafragma) y tiene la ventaja práctica de que **no depende de las secciones** — no hay que rehacer el reparto cada vez que se ajustan perfiles, a diferencia de un reparto por rigidez (que sí lo exigiría, y fue parte de lo que hizo laborioso el estático la primera vez).
 
