@@ -80,6 +80,66 @@ Lo que sí es puramente geométrico, y conviene mirar primero como filtro rápid
 
 **Por qué vale la pena verificarlo igual**: si el perfil resulta totalmente efectivo, `Se = S` y la resistencia sale directo (`Ma = φb·S·Fy`, φb=0,90) sin iterar anchos efectivos — se puede comparar secciones a mano, en una planilla, sin depender del software. Y la verificación es barata: alcanza con escalar el λ publicado por √(Fy_nuevo/Fy_ejemplo).
 
+### Correas bajo SUCCIÓN: son dos verificaciones distintas, no una
+
+En una correa de pared (o de cubierta) el revestimiento amura al **ala exterior**. Eso cambia qué ala está comprimida según el signo del viento, y por lo tanto **cambia la longitud de pandeo**:
+
+| | Ala comprimida | ¿La arriostra el panel? | Lb |
+|---|---|---|---|
+| **Presión** | exterior | **sí** | ≈ 0 (continuo) |
+| **Succión** | **interior** | **no** | separación de riostras, o toda la luz |
+
+**Son dos chequeos con configuraciones distintas del mismo miembro.** No alcanza con buscar "el peor momento": el caso de succión puede tener un momento *menor* y aun así gobernar, porque su resistencia disponible es mucho menor. Es el mismo razonamiento que obliga a poner tornapuntas en las columnas.
+
+**Cuidado con el default del software**: si el Design Check Details muestra `Mne = Sf·Fy` exacto (sin ninguna reducción), el programa está tomando la barra como continuamente arriostrada — o sea está resolviendo **solo el caso de presión**, para los dos signos de viento.
+
+#### Cómo aislar el caso de succión en RFEM
+
+1. **Identificar los Load Cases de viento que dan succión sobre esa pared.** El criterio robusto no es el signo del momento (depende de la orientación de los ejes locales, que ya nos jugó una mala pasada) sino **el signo de la deformación**: en `Results → Members → Deformations`, la correa que se desplaza **hacia afuera** del edificio está en succión.
+2. **Separar el chequeo en dos Design Situations** en Steel Design, una con los LC/CO de presión y otra con los de succión (Design Situations acepta filtrar por combinaciones).
+3. **Asignar un objeto *Effective Lengths* distinto a cada una**: la de presión con el ala comprimida arriostrada (Lb chico), la de succión con **Lb = separación real de riostras del ala interior** — y si no hay riostras, Lb = la luz completa.
+4. Recién ahí comparar los dos η. El que gobierne es el que manda.
+
+> Mientras no esté armado así, el η de correas que informa RFEM vale solo para presión.
+
+#### El artículo que corresponde — y por qué muchas veces no se puede usar
+
+El CIRSOC 303 tiene un artículo hecho para esto: **C.3.1.3, "Vigas con el ala traccionada unida en forma fija y continua a un tablero o revestimiento"** — exactamente el caso de succión. Da `Mn = R·Se·Fy` con φb=0,90 y R de la Tabla C.3-1 (**R = 0,70** para d ≤ 165 mm), o sea resuelve el problema con un solo factor.
+
+**Pero tiene 15 condiciones de aplicabilidad**, y las geométricas son restrictivas. Las tres que más filtran:
+
+- (3) `60 ≤ d/t ≤ 170`
+- (4) `2,8 ≤ d/b ≤ 4,5` (altura / ancho de ala)
+- (5) `16 ≤ ancho plano del ala / t ≤ 43`
+
+Están calibradas sobre perfiles **más esbeltos y angostos** que los C comerciales argentinos típicos, así que **conviene chequear las tres antes de contar con el R** — un C 120x50x2,5 falla las tres (d/t=48, d/b=2,4, b/t=13,2) y un PC 160x60x2,5 falla la (4) por poco (2,67 vs 2,8). Si alguna no se cumple, el reglamento manda a ensayos o a *"un procedimiento de análisis racional"* → hay que ir por **C.3.1.2.1** (pandeo lateral-torsional), abajo.
+
+#### Verificación manual por C.3.1.2.1 — validada contra el reglamento
+
+Para secciones **C de simetría simple** flexionadas respecto del eje perpendicular al alma, el 303 permite la forma simplificada (Ec. **C.3.1.2.1-14**):
+
+```
+Fe = Cb·π²·E·d·Iyc / [Sf·(ky·Ly)²]        Iyc = Iy/2 (mitad comprimida)
+
+Fc = Fe                                    si Fe ≤ 0,56·Fy      (elástico)
+Fc = (10/9)·Fy·(1 − 10·Fy/(36·Fe))         si 0,56·Fy < Fe < 2,78·Fy
+Fc = Fy                                    si Fe ≥ 2,78·Fy
+
+Mn = Sc·Fc          φb = 0,90
+```
+
+`Cb` por Ec. C.3.1.2.1-10; **Cb = 1,0 siempre está permitido y es conservador** (para carga uniforme simplemente apoyada da 1,136 — la diferencia suele no cambiar la conclusión, conviene correr las dos).
+
+**Validado**: con el PC 160x60x20x2,5 del Ejemplo N°3 de los *Ejemplos de Aplicación* del 303 y Lb = 450 cm, esta implementación devuelve **Fe = 88,97 MPa**, idéntico al valor publicado. Sirve para comparar secciones a mano sin depender del software.
+
+**Lo que hay que saber de antemano**: en el rango elástico (`Fc = Fe`, que es donde cae una correa sin arriostrar) el `Sf` se cancela y queda
+
+```
+Ma = 0,9·Cb·π²·E·(d·Iy/2) / L²
+```
+
+o sea **la resistencia en succión sin arriostrar depende de `d·Iy`, no del módulo resistente**. Agrandar la altura sin agrandar el ala no ayuda casi nada: hay que ganar `Iy`, que es ancho de ala. Y aun así el número es tan chico que **arriostrar el ala interior deja de ser opcional** — ver el caso de Añelo en `calculo-polideportivo-anelo.md`, donde sin riostras haría falta 2,3 veces más `d·Iy` que el perfil que ya verifica con riostras a tercios.
+
 ### Con qué carga se verifica el ELS — no es la combinación de resistencia
 
 CIRSOC 101-25 (C 1.3.2 y C 2.3) no da valores numéricos de flecha: fija el principio y remite. Su comentario dice que *"los estados límite de servicio y los factores de carga asociados se consideran en el Apéndice C de ASCE 7-2010"*, y el Comentario C-A.4.4 del CIRSOC 303 lo refuerza: *"Las cargas de servicio adecuadas para verificar los estados límites de servicio pueden ser apenas una fracción de las cargas nominales."*
