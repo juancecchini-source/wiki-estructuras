@@ -37,6 +37,29 @@ Para **voladizos** (nota b de la tabla): **L = 2 × longitud del voladizo** — 
 
 **Desplazamiento lateral por sismo**: la Tabla L.3.1 remite explícitamente (nota d) al **Reglamento INPRES-CIRSOC 103, Parte IV** para las combinaciones con acciones sísmicas — NO usar los valores de esta tabla para deriva sísmica. Ya está resuelto correctamente en este proyecto vía Tabla 6.4 de INPRES-CIRSOC 103 (ver `metodo-inpres-cirsoc103-sismo.md`, sección de distorsión horizontal) — no confundir ambos chequeos ni mezclar límites de una tabla con combinaciones de la otra.
 
+### Correas de PARED (flecha horizontal por viento) — la Tabla L.3.1 NO cubre este caso
+
+Buscado en el texto completo del CIRSOC 301-18 y del CIRSOC 303 el 02/09. **No existe un límite reglamentario para la flecha horizontal de una correa de pared bajo viento.** Conviene saberlo antes de aceptar el número que ponga el software:
+
+- Las filas de **"Deformaciones verticales"** de la Tabla L.3.1 son para miembros que soportan **cubiertas o pisos** — son flechas verticales por gravedad. Una correa de pared flectada horizontalmente por viento no entra.
+- Las filas de **"Desplazamiento lateral"** son para **columnas y para el edificio** (H/150, HT/300, HP/400…), no para un miembro flexionado.
+- **CIRSOC 303-2009 es el reglamento que rige estos perfiles** (el 301 lo remite explícitamente: *"Para el proyecto de elementos estructurales resistentes de chapa de acero doblada o conformada en frío de sección abierta… se aplicarán las especificaciones del Reglamento CIRSOC 303-2009"*). **No tiene tabla propia**: su Comentario C-A.4.4 dice que *"las especificaciones adoptadas son las del Capítulo L y el Apéndice L del Reglamento CIRSOC 301-2005"*. O sea remite de vuelta a la misma Tabla L.3.1, que tampoco cubre el caso.
+- Los dos reglamentos son explícitos en que esto queda **abierto a criterio**: el 303 (C-A.4.4) dice que la especificación base *"no contiene requisitos específicos ni combinación de acciones aplicables dejando las mismas libradas al criterio del Proyectista o al acuerdo entre Proyectista y Comitente"*; el 301 (L.3) admite fijar límites por *"especificaciones particulares (por ejemplo revestimientos especialmente sensibles a fisuración o daño por deformación)"*.
+
+**Consecuencia práctica**: el valor que RFEM aplique acá (L/200 por default) **no sale del reglamento** — es un default del software. Es una decisión de proyecto que hay que tomar y justificar, y no es menor: en un caso real (Añelo, correa de pared) mover el criterio entre L/120 y L/200 cambió el η de 1,04 a 1,73, o sea decidía sola qué perfil comprar.
+
+**Criterio recomendado: L/150**, por convergencia de las dos analogías más cercanas dentro de la propia Tabla L.3.1 — que dan el mismo número por caminos independientes:
+1. **"Miembros soportando cubiertas flexibles: L/150"** (edificios industriales) — analogía por el tipo de revestimiento soportado: un panel metálico es un cerramiento flexible, tolera deformación sin fisurar. Es la fila que trata *"elemento que soporta un revestimiento liviano"*.
+2. **"Desplazamiento de columnas respecto a la base por acción de viento: H/150"** (edificios industriales) — analogía por la acción: es la única fila del reglamento que fija cuánta deformación lateral por viento se acepta en un edificio industrial.
+
+Documentar el criterio adoptado **con su porqué** y, si el fabricante del revestimiento fija uno más exigente, ese manda (L.3 lo habilita expresamente).
+
+### Con qué carga se verifica el ELS — no es la combinación de resistencia
+
+CIRSOC 101-25 (C 1.3.2 y C 2.3) no da valores numéricos de flecha: fija el principio y remite. Su comentario dice que *"los estados límite de servicio y los factores de carga asociados se consideran en el Apéndice C de ASCE 7-2010"*, y el Comentario C-A.4.4 del CIRSOC 303 lo refuerza: *"Las cargas de servicio adecuadas para verificar los estados límites de servicio pueden ser apenas una fracción de las cargas nominales."*
+
+Concretamente, para deflexiones bajo viento el Apéndice C de ASCE 7 usa **0,7W** (viento de recurrencia menor), no W pleno. **Verificar contra qué combinación está corriendo la Design Situation de Serviceability en RFEM**: si arrastra el viento sin reducir, la flecha sale ~30% sobreestimada y eso se paga en sección.
+
 ### Seismic Configuration — NO corresponde a CIRSOC, destildar
 
 RFEM (módulo AISC 360) trae una pestaña **"Seismic Configuration"** con parámetros tipo **"Seismic force-resisting system: OMF (Ordinary Moment Frames)"** y distancia a rótula plástica (Sh) — esto es la categorización de **AISC 341** (provisiones sísmicas de EE.UU.: pórticos a momento ordinario/intermedio/especial, arriostrados concéntricos/excéntricos, con su propio detallado dúctil).
