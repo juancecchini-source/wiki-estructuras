@@ -146,6 +146,16 @@ El cerramiento pasó de **chapa 0,6mm (0,06 kN/m²)** a **panel Maxiroof PUR 50m
 
 Sin entrepisos pero con dos alturas de techo (nave vs. alero-vestuarios), tratar como **n=2 niveles de masa** para [6.11], cada uno con su Wk y su altura representativa (centro de gravedad del techo respectivo — aproximación razonable: promedio eave-cumbrera). Wk de cada zona se obtiene igual que W global: sumar reacciones de `CC_W_sismico` filtrando solo los nodos de esa zona.
 
+**Valores calculados (02/09, con V₀ = 232,3 kN):**
+
+| Nivel de masa | Fk (kN) | % de V₀ |
+|---|---|---|
+| Nave (pórtico) | **198,58** | 85,5% |
+| Alero (vestuarios) | **33,73** | 14,5% |
+| **Suma** | **232,31** | **100%** ✓ |
+
+La suma cierra contra V₀ — es el control que hay que hacer siempre después de aplicar [6.11], porque un error en las alturas representativas o en el reparto de Wk no se ve de otra forma.
+
 **Reparto de Fk entre los pórticos de una misma zona**: por **masa tributaria** (ancho de paño de cada pórtico / ancho total de la zona, con ajuste de medio paño en los pórticos de punta), NO por rigidez relativa. Es la distribución correcta para diafragma flexible (cada pórtico resiste su propia masa, sin redistribución vía diafragma) y tiene la ventaja práctica de que **no depende de las secciones** — no hay que rehacer el reparto cada vez que se ajustan perfiles, a diferencia de un reparto por rigidez (que sí lo exigiría, y fue parte de lo que hizo laborioso el estático la primera vez).
 
 ## Método dinámico (Cap. 7, Procedimiento Modal Espectral) — evaluado y DESCARTADO para este proyecto (ver "Cierre del método dinámico" más abajo). Queda documentado como referencia para un proyecto futuro con diafragma rígido/semirrígido real.
