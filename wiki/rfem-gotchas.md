@@ -2,7 +2,7 @@
 name: rfem-gotchas
 description: Comportamientos no obvios de RFEM 6 descubiertos en la práctica. Revisar antes de arrancar un modelo nuevo.
 status: ACTIVO
-last_updated: 2026-09-01
+last_updated: 2026-09-02
 ---
 
 # RFEM — gotchas y comportamientos no obvios
@@ -245,6 +245,41 @@ El tipo **"Continuous Members"** de Member Set en RFEM 6 **no requiere que la ca
 **Regla práctica para este proyecto**: un Member Set por columna física (agrupando solo sus propios tramos partidos, ej. los 3 Members de 0,95m), nunca el pórtico entero. Con columnas repetidas idénticas (este proyecto: 10 pórticos × 2 = 20 Member Sets), la asignación de Effective Lengths sí se puede hacer en un solo paso — seleccionando todos los Member Sets juntos en la tabla y aplicando el mismo tipo, ya que *"each effective length ... can be assigned to several members or sets of members at the same time"*.
 
 Fuentes: [Member Sets \| Basic Objects \| Structure \| RFEM 6](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6/000044), [Columns \| Member Design Parameters \| RFEM 6 \| Tutorial – Steel Design](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6-tutorial-steel-design/002937), [Determining Effective Lengths in RFEM 6 (KB 001727)](https://www.dlubal.com/en/support-and-learning/support/knowledge-base/001727).
+
+## Las tres formas de que RFEM chequee estabilidad de una columna partida — y cuál conviene (02/09)
+
+Investigado en la documentación de Dlubal a raíz de la pregunta de si conviene reunificar la columna del pórtico (3 tramos de 0,95m) o seguir extrayendo resultados por tramo y reverificando el elemento completo a mano. **Los cuatro hechos que definen la decisión:**
+
+**1. Un Member individual se chequea SOLO con su propia longitud — no hay forma de evitarlo.** Literal de Dlubal: *"For members, only the respective member length is considered. Therefore, as a rule, only a member-set-based check of the member is possible"*, y *"for stability checks it is necessary to use a member set so that the critical load for the lateral-torsional buckling check is determined correctly or the entire member length is taken into account as the buckling length"*. Consecuencia directa: con la columna partida y diseñada por Members sueltos, el η automático de RFEM usa **KL=0,95m y Lb=0,95m** — no es un chequeo conservador con el que se pueda transar, es un chequeo de otra barra. Si el η de RFEM se parece al manual, es coincidencia, no validación.
+
+**2. Member y Member Set son mutuamente excluyentes por diseño, no por bug.** *"When designing as a member set, the associated members are automatically deactivated for steel design. If you define the members for design, the superordinate member set is deactivated accordingly."* Esto explica el **ER0032 "Designed via member set"** que bloqueó la vista de resultados por miembro el 01/09 teniendo Members y Member Sets tildados a la vez en Objects to Design: es el comportamiento esperado, no algo a destrabar con configuración.
+
+**3. Existe una tercera vía oficial que evita los Member Sets: nodos tipo "On Member".** *"Straight, uniform members can alternatively be modeled as continuous members with Nodes on Members. The stability check is then also possible without member sets."* El tipo de nodo **"On Member"** (uno de los 5 tipos de nodo de RFEM 6: Standard, Between Two Nodes, Between Two Points, On Line, On Member): *"With this node type, a member is not divided into two members, but remains complete"*, y es un nodo estructural pleno — sirve para *"arrange singular lateral supports on the member"* y para aplicar cargas. Es además el tipo que RFEM crea **por defecto** al conectar miembros que se cruzan (Auto Connect: *"the program creates a node of the 'on member/on line' type on the existing line or member by default"* — se puede invertir en Options → Program Options, desactivando la conexión "by internal nodes", y ahí sí parte el miembro).
+
+- **Vinculación real de la correa**: los miembros solo se conectan en nodos (*"Members can only be connected to each other at nodes. If members cross without sharing a node, there is no connection"* — y no se transfieren esfuerzos internos). La red de seguridad es la opción de mallado **"Division by nodes lying on members"** (Calculation → Mesh Settings): *"FE nodes are created at member locations where other members connect to the member but have no connection to the member"*. Verificar que esté activa antes de confiar en una unificación.
+
+**4. Los apoyos nodales del chequeo NO se toman del modelo — se declaran a mano.** *"By default, a lateral and torsional restraint is set at the start and end nodes of a member or a member set. The nodal supports are thus not transferred automatically from the model! In most cases, it is therefore necessary to adjust the nodal support manually."* O sea: unificar la columna **no arregla nada por sí solo**; el trabajo real (y la decisión de ingeniería) está en declarar qué restricción hay en cada nodo intermedio.
+
+- Cada apoyo intermedio **parte el elemento en segmentos**, y cada dirección parte un modo distinto: apoyo en **z/v** parte la longitud de pandeo del eje mayor (factor ky/u); apoyo en **y/u** parte la del eje menor (kz/v); restricción **alrededor de x** parte la de pandeo torsional (kT).
+- **Se puede declarar restricción por ala** (lo que permite representar la distinción barlovento/sotavento sin hipótesis): *"Individual flange restraints are possible by fixing the y-axis and releasing (unchecking) the rotation about the local x-axis restraint (torsion)"*, y el apoyo lateral en y/u admite **excentricidad respecto a la posición del ala**. Esto es lo que **no** se puede representar con la columna partida, donde RFEM impone restricción lateral **y** torsional plena en cada extremo de tramo por default.
+
+### Atajo sin tocar geometría: longitudes efectivas absolutas
+
+Para miembros **sin** nodos intermedios, la pestaña "Nodal Supports & Effective Lengths" admite un segundo método: cargar directamente **K-factors o longitudes absolutas de pandeo**, salteando la definición por nodos — *"particularly useful when intermediate supports haven't been modeled"*. Aplicado a una columna partida, permite decirle a RFEM "este tramo de 0,95m tiene Lb=2,85m y KL=2,85m" y obtener un η automático **físicamente correcto sin reunificar nada**. Limitaciones a tener en cuenta:
+
+- Es un número cargado a mano: **no sigue a la geometría** si cambia el modelo. Documentar el criterio junto al valor.
+- Para que Lb entre directo en las fórmulas de Cap. F conviene usar el método **"AISC Chapter F"** de Mcr, no **"Eigenvalue"** (el eigenvalue calcula Mcr sobre el segmento real del modelo, que es justo lo que estamos tratando de puentear). Bonus: Chapter F es el mismo camino que la verificación manual, así que la comparación manual vs. RFEM queda apples-to-apples.
+- **A confirmar en la UI**: que RFEM acepte una longitud absoluta **mayor** que la longitud del miembro sin rechazarla — no está dicho en la doc.
+
+### Si se decide reunificar: la fusión NO se hace donde llega una correa
+
+**"Delete Node → Merge Joined Lines/Members"** (click derecho sobre el nodo compartido) solo funciona en nodos conectados por **exactamente dos** líneas/miembros. En los nodos intermedios de esta columna llegan además la correa y/o el tensor, así que ahí **no aplica** — hay que borrar los tramos superiores y re-extender el inferior hasta el nodo de arriba, y después convertir los nodos de correa a tipo "On Member".
+
+**Dos riesgos concretos de la cirugía, a verificar sí o sí después:**
+- **Referencias de carga de viento**: la tabla "Generated on Members ... Loaded" del Wind Load Wizard apunta a números de miembro (ver gotcha del wizard más arriba). Borrar/fusionar miembros puede dejar esas listas apuntando a miembros inexistentes **sin aviso**. Control: comparar la **reacción total de base por caso de viento** antes y después de la cirugía — si cambia, se perdió carga.
+- **Renumeración**: la documentación del proyecto referencia miembros por número (ej. miembro 129, 625). Anotar el mapeo viejo→nuevo al reunificar, o las verificaciones registradas quedan huérfanas.
+
+Fuentes: [Member Sets \| Options for Steel Design (rfem-6-steel-design/000113)](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6-steel-design/000113), [Effective Length \| Design Specifications (rfem-6-steel-design/000101)](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6-steel-design/000101), [Nodes \| Basic Objects \| RFEM 6 (000037)](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6/000037), [Members \| Basic Objects \| RFEM 6 (000039)](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6/000039), [Connect Lines/Members (003180)](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6/003180), [Merge Lines/Members (003615)](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6/003615), [Mesh Settings (000242)](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6/000242), [Auto Connect Lines/Members (FAQ 005313)](https://www.dlubal.com/en/support-and-learning/support/faq/005313), [Effective Lengths for Steel Stability Design (FAQ 005240)](https://www.dlubal.com/en/support-and-learning/support/faq/005240), [Lateral-Torsional Buckling Methods – AISC Chapter F (KB 001679)](https://www.dlubal.com/en/support-and-learning/support/knowledge-base/001679).
 
 ## Steel Design — miembros no aptos (tensores, hormigón) mal incluidos en Objects to Design bloquean todo el resumen (01/09)
 
