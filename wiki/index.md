@@ -17,7 +17,8 @@ last_updated: 2026-09-02
 - `normativa-vigente.md` — ACTIVO. Estado de vigencia de cada reglamento CIRSOC, con fecha de última verificación, y **el lineamiento de jerarquía de fuentes** (qué hacer cuando el CIRSOC no cubre el caso). Revisar antes de arrancar un proyecto nuevo.
 - `rfem-gotchas.md` — ACTIVO. Comportamientos no obvios del software (wizards, add-ons, visualización).
 - `rfem-buenas-practicas.md` — ACTIVO. Prácticas recomendadas por Dlubal para cualquier proyecto: verificación de modelo (Model Check/Plausibility Check), **verificación de orientación/rotación de secciones**, tolerancias, equilibrio global, mallado FE, reducción de combinaciones, backups/versionado.
-- `materiales-perfiles.md` — ESTABLE. Equivalencias W/A992 vs IPN-UPN/F24-F36.
+- `materiales-perfiles.md` — ACTIVO. Equivalencias W/A992 vs IPN-UPN/F24-F36, y **las calidades adoptadas por defecto** (W → F-36; correas, chapas y redondos → F-24).
+- `optimizacion-costo-estructura.md` — ACTIVO. **Palancas que bajan el costo de una nave de forma significativa**, con cuánto movieron la aguja en un caso real y qué las condiciona. Recorrerlo al ARRANCAR un precálculo, no al final.
 
 ## Proyectos (viven mientras dura el proyecto, después pasan a HISTORICO)
 
