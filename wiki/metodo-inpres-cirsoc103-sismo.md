@@ -72,12 +72,25 @@ Desglose que se deduce de esos dos valores (no hace falta medirlo aparte):
 | LC30 — cerramiento (sin mayorar) | 196,96 |
 | LC23 + LC29 — nieve balanceada total (sin factor) | 1.465,25 |
 
-**Coeficiente sísmico implícito: C = V₀/W = 364,83 / 1.787,18 = 0,2041.**
+**Estas mediciones corresponden al modelo con el cerramiento ya cambiado a panel y con las rótulas nuevas de correas y columnas de frontis ya aplicadas** (confirmado por Juan 02/09). Que el modelo haya cerrado equilibrio con esas rótulas confirma de paso que no quedó ningún mecanismo.
+
+### V₀ actualizado por el cambio de chapa a panel (02/09)
+
+El cerramiento pasó de **chapa 0,6mm (0,06 kN/m²)** a **panel Maxiroof PUR 50mm (0,105 kN/m²)** — ver el peso adoptado en el archivo de proyecto. Superficie de cerramiento implícita: 196,96 / 0,105 = **1.876 m²**.
+
+| | W (kN) | V₀ (kN) |
+|---|---|---|
+| Con chapa (estado del 28/08) | 1.698,55 | 364,83 |
+| **Con panel (estado actual)** | **1.787,18** | **383,9** |
+
+Aumento: **+5,2%**. El W anterior se reconstruyó escalando LC30 hacia atrás (1.876 m² × 0,06 = 112,55 kN), no se midió — **vale mientras el autopeso de la estructura (LC1) no haya cambiado entre el 28/08 y hoy**. Si se cambiaron secciones en el medio, rehacer.
+
+**PENDIENTE — registrar C con su derivación, no despejado.** El **C = 364,83 / 1.698,55 = 0,2148** que se usa arriba está **despejado de V₀/W**, no calculado. C es un coeficiente reglamentario que depende de Ca, Cv, R, γr y T — no de W. Anotar acá la cadena completa (T adoptado, tramo del espectro, Sa, y cómo entran γr=1,3 y R=3) para no seguir arrastrando un valor obtenido por división. Mientras tanto el número sirve, porque **T no sale del modelo** (ver abajo) y la geometría no cambió.
 
 **Decisión — el 1,05 sobre las cargas permanentes (confirmado por Juan 02/09)**: es un **mayorante del 5% sobre el peso propio** para cubrir lo que el modelo de barras no dibuja — chapas de nudo, bulones, soldadura. Aplicado consistente en CO8 y CO9. No es un factor reglamentario ni parte de la ecuación [3.15]: es un criterio de proyecto, y por eso queda escrito acá.
 
 **El período T no sale del modelo** — se calcula con la fórmula empírica y el tope de [6.7]. Consecuencia práctica importante: **si cambia la masa pero no la geometría, C no cambia y V₀ escala lineal con W** (`V₀_nuevo = 0,2041 × W_nuevo`), sin necesidad de rehacer nada del capítulo. Solo hay que recalcular T si cambia la altura o la tipología.
-- **Mampostería de cerramiento (0 a 3m) — no modelada, y está bien no modelarla para carga gravitatoria** (apoya en el suelo, no cuelga de la estructura). **Para W el criterio es otro y depende de la junta**: si existe junta de separación sísmica real entre la mampostería y las columnas, su masa inercial va a su propia fundación y **queda fuera de W**; si está en contacto, hay que incluirla **y** deja de ser solo un tema de masa (el relleno rigidiza el pórtico, atrae carga y puede generar columna corta). El archivo de proyecto ya la registra como *"sin función estructural, requiere junta de separación"* — **confirmar que la junta está efectivamente prevista en el proyecto**, porque de eso depende cuál de los dos caminos aplica. Nota adicional: aun con junta, la mampostería necesita vínculo lateral para su estabilidad fuera del plano, y esa fuerza de anclaje **sí** es una acción local sobre la estructura (misma lógica de Wi = Di + f1·Li + f2·Si aplicada al componente, ec. [3.15]).
+- **Mampostería de cerramiento (0 a 3m) — no modelada, y está bien no modelarla para carga gravitatoria** (apoya en el suelo, no cuelga de la estructura). **Para W el criterio es otro y depende de la junta**: si existe junta de separación sísmica real entre la mampostería y las columnas, su masa inercial va a su propia fundación y **queda fuera de W**; si está en contacto, hay que incluirla **y** deja de ser solo un tema de masa (el relleno rigidiza el pórtico, atrae carga y puede generar columna corta). **Criterio adoptado (Juan, 02/09): se asume junta, con el mismo estatus que la junta de las gradas** — o sea, la mampostería queda **fuera de W**, condicionado a que la junta se confirme. Los dos pendientes (junta de mampostería y junta de tribunas) van juntos: si uno cae, hay que revisar los dos, porque sostienen la misma hipótesis de masas que no entran al sistema resistente. Nota adicional: aun con junta, la mampostería necesita vínculo lateral para su estabilidad fuera del plano, y esa fuerza de anclaje **sí** es una acción local sobre la estructura (misma lógica de Wi = Di + f1·Li + f2·Si aplicada al componente, ec. [3.15]).
 - **f1×L**: probablemente **≈0 para este proyecto** — las tribunas están apoyadas en el suelo con fundación propia, independientes de columnas/vigas/pórticos (no le transmiten masa sísmica al sistema resistente que se está diseñando), y todo el edificio es a nivel de suelo (sin entrepisos apoyados en la estructura). **Condición para que esto sea válido**: debe existir junta de separación sísmica real entre tribuna y edificio (evitar golpeteo/pounding) — confirmar que está contemplada en el proyecto.
 
 ## Corte basal y distribución en altura (Art. 6.2, confirmado contra el texto del reglamento)
