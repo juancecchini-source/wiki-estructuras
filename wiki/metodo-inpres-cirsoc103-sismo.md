@@ -2,7 +2,7 @@
 name: metodo-inpres-cirsoc103-sismo
 description: Metodología de carga sísmica según INPRES-CIRSOC 103 Parte I, incluye combinación de acciones (Art. 3.7), fórmula de Ev (Art. 3.5.2). Método dinámico modal-espectral evaluado y DESCARTADO para este proyecto (28/08) — se vuelve al método estático. Ver sección "Cierre del método dinámico" y Pendientes al pie.
 status: ACTIVO
-last_updated: 2026-08-31
+last_updated: 2026-09-02
 ---
 
 # Carga sísmica — INPRES-CIRSOC 103 Parte I
@@ -52,8 +52,32 @@ Aparte del Ev general de 3.5.2, los componentes sensibles a vibración vertical 
 ## W (peso sísmico) — estado actual
 
 W = D + f1×L + f2×S. Para este proyecto puntual:
-- **D**: resuelto (autopeso real LC1 + peso de chapa LC30, ya modelados).
-- **f2×S**: resuelto conceptualmente (0,20 × envolvente de nieve RC1) — falta armar la combinación en RFEM.
+- **D**: resuelto (autopeso real LC1 + peso de cerramiento LC30, ya modelados).
+- **f2×S**: **resuelto y armado en RFEM** (02/09). Se usaron los **casos balanceados directos** (LC23 nave + LC29 alero) al 0,20, **no** la envolvente RC1 que se había propuesto conceptualmente. Es la elección correcta y no una simplificación: para masa sísmica interesa la nieve **esperable** durante el sismo, no el máximo de acumulación/arrastre/deslizamiento, que es un caso de dimensionado y no un estado de carga probable.
+
+### Las dos combinaciones de peso sísmico (medidas 02/09)
+
+Son el insumo de todo lo demás — de acá salen W y V₀, así que quedan registradas acá y no hay que volver a medirlas:
+
+| CO | Nombre en RFEM | Composición | Σ reacciones Z |
+|---|---|---|---|
+| **CO8** | `CC_W_sismico` | 1,05·LC1 + 1,05·LC30 + 0,20·LC23 + 0,20·LC29 | **1.787,18 kN** |
+| **CO9** | `CC_D_sismico` | 1,05·LC1 + 1,05·LC30 | **1.494,13 kN** |
+
+Desglose que se deduce de esos dos valores (no hace falta medirlo aparte):
+
+| Componente | kN |
+|---|---|
+| LC1 — autopeso de la estructura (sin mayorar) | 1.226,02 |
+| LC30 — cerramiento (sin mayorar) | 196,96 |
+| LC23 + LC29 — nieve balanceada total (sin factor) | 1.465,25 |
+
+**Coeficiente sísmico implícito: C = V₀/W = 364,83 / 1.787,18 = 0,2041.**
+
+**Decisión — el 1,05 sobre las cargas permanentes (confirmado por Juan 02/09)**: es un **mayorante del 5% sobre el peso propio** para cubrir lo que el modelo de barras no dibuja — chapas de nudo, bulones, soldadura. Aplicado consistente en CO8 y CO9. No es un factor reglamentario ni parte de la ecuación [3.15]: es un criterio de proyecto, y por eso queda escrito acá.
+
+**El período T no sale del modelo** — se calcula con la fórmula empírica y el tope de [6.7]. Consecuencia práctica importante: **si cambia la masa pero no la geometría, C no cambia y V₀ escala lineal con W** (`V₀_nuevo = 0,2041 × W_nuevo`), sin necesidad de rehacer nada del capítulo. Solo hay que recalcular T si cambia la altura o la tipología.
+- **Mampostería de cerramiento (0 a 3m) — no modelada, y está bien no modelarla para carga gravitatoria** (apoya en el suelo, no cuelga de la estructura). **Para W el criterio es otro y depende de la junta**: si existe junta de separación sísmica real entre la mampostería y las columnas, su masa inercial va a su propia fundación y **queda fuera de W**; si está en contacto, hay que incluirla **y** deja de ser solo un tema de masa (el relleno rigidiza el pórtico, atrae carga y puede generar columna corta). El archivo de proyecto ya la registra como *"sin función estructural, requiere junta de separación"* — **confirmar que la junta está efectivamente prevista en el proyecto**, porque de eso depende cuál de los dos caminos aplica. Nota adicional: aun con junta, la mampostería necesita vínculo lateral para su estabilidad fuera del plano, y esa fuerza de anclaje **sí** es una acción local sobre la estructura (misma lógica de Wi = Di + f1·Li + f2·Si aplicada al componente, ec. [3.15]).
 - **f1×L**: probablemente **≈0 para este proyecto** — las tribunas están apoyadas en el suelo con fundación propia, independientes de columnas/vigas/pórticos (no le transmiten masa sísmica al sistema resistente que se está diseñando), y todo el edificio es a nivel de suelo (sin entrepisos apoyados en la estructura). **Condición para que esto sea válido**: debe existir junta de separación sísmica real entre tribuna y edificio (evitar golpeteo/pounding) — confirmar que está contemplada en el proyecto.
 
 ## Corte basal y distribución en altura (Art. 6.2, confirmado contra el texto del reglamento)
