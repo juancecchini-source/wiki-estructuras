@@ -90,23 +90,32 @@ El mínimo de [6.6] da `0,11 × 0,12 × 1,3 = 0,017` — no gobierna, queda muy 
 
 **No despejar C de V₀/W.** C es un coeficiente reglamentario que depende de Ca, γr, R y T — no de W. Despejarlo de un V₀ de otra época propaga cualquier error que tenga ese V₀ (fue exactamente lo que pasó el 02/09: dio 0,2148, un 65% de más).
 
-### ⚠️ V₀ — inconsistencia abierta (02/09), resolver antes de seguir con el capítulo de sismo
+### V₀ corregido de 364,83 a 232,3 kN — causa confirmada (02/09)
 
-Con la fórmula verificada y el W medido del modelo:
+**El modelo tenía cargado 0,64 kN/m² de cerramiento en vez de 0,06** — un error de unidades de factor 10, confirmado por Juan. Todo lo calculado hasta el 01/09 corrió con ~1.000 kN de peso propio inexistente.
 
-`V₀ = C × W = 0,13 × 1.787,18 = **232,3 kN**`
+| | kN |
+|---|---|
+| Cerramiento erróneo: 1.876 m² × **0,64** | 1.200,6 |
+| W con ese error = 1,05·(1.226,02 + 1.200,6) + 293,05 | **2.841,0** |
+| V₀ que eso produce = 0,13 × 2.841,0 | **369,3** |
+| V₀ que estaba documentado y cargado en el modelo | 364,83 |
 
-Pero el valor que venía documentado es **V₀ = 364,83 kN**, y el export `Anexo/Añelo - s - Summary.xlsx` (28/08) confirma que el modelo **tiene aplicados 364,774 kN** de carga sísmica horizontal (`Sum of loads in X`). O sea que no es un error de transcripción: es lo que está cargado.
+La diferencia residual de 1,2% se explica porque el LC1 de entonces era ~1.193 kN contra los 1.226 de hoy (2,7%), compatible con los ajustes de sección hechos entre el 28/08 y el 01/09.
 
-Ese V₀ implica **W = 364,83 / 0,13 = 2.806 kN**, o sea **1.019 kN más** que el CO8 medido (1.787,18 kN).
+**Valor correcto:**
 
-**Hipótesis más probable**: el V₀ de 364,83 se calculó con un **W estimado a mano** antes de que el modelo diera el peso propio real. Es coherente con la advertencia que encabeza esta misma sección (*"W: NO estimar a mano si se puede evitar — modelar primero... y usar el peso propio real resultante"*), que probablemente se escribió justamente después de esa estimación.
+`V₀ = C × W = 0,13 × 1.787,18 = **232,3 kN**` — un **36% menos** que el que está cargado.
 
-**Qué verificar antes de adoptar 232,3 kN**:
-1. Con qué W se generaron **LC34 (E dir. X)** y **LC35 (E dir. Y)**. Si llevan el V₀ viejo, el modelo está **57% sobrecargado en sismo**.
-2. Que al CO8 actual no le falte ninguna masa (¿entra algo de `f1×L`? ¿alguna zona de cubierta sin superficie de reparto?). Bajar V₀ un 36% es una decisión que hay que poder defender.
+**Consecuencias, separadas por si importan o no:**
 
-**Consecuencia si se confirma**: la distorsión horizontal, que verificaba con márgenes de 1,9x y 1,3x, pasa a verificar con **mucho más margen** — el corte baja un 36%. Eso compensa de sobra la pérdida de rigidez por las rótulas nuevas y el +5,2% de masa del panel.
+- **Hay que regenerar LC34 (E dir. X) y LC35 (E dir. Y)** con el V₀ nuevo. Hasta que eso pase, el modelo está 57% sobrecargado en sismo.
+- **La distorsión horizontal mejora mucho** (corte −36%): compensa de sobra el +5,2% de masa del panel y la pérdida de rigidez de las rótulas nuevas. Deja de ser un pendiente en riesgo.
+- **Las columnas casi no cambian**: están gobernadas por flexión de viento. El P de la columna del pórtico baja de −177,96 a ~−128 kN, pero la compresión pesa 0,03 sobre un η de 0,83.
+- **Sí cambian correas y reticulado**, que son los elementos gobernados por gravitatorias — es donde puede haber sobredimensionado real, y por eso importa para una cotización.
+- **La deriva ELS de 26,0 mm NO mejora**: es bajo DS2 con viento, y sacar peso propio no reduce el desplazamiento lateral por viento en un modelo geométricamente lineal. La causa sigue siendo la sección de H°A°.
+
+**Lección de proceso**: el archivo de proyecto decía 0,06 kN/m² mientras el modelo tenía 0,64. La documentación y el modelo estaban divergidos, y el error sobrevivió porque **nadie chequeó nunca la carga total contra la superficie**. El chequeo que lo habría detectado en 30 segundos: `Σ reacciones Z del load case ÷ carga unitaria = superficie implícita`, y comparar contra la superficie real. Hacerlo cada vez que se carga o se cambia una Surface Load.
 
 ### Efecto del cambio de chapa a panel sobre W (02/09)
 
