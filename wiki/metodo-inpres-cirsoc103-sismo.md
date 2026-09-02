@@ -74,18 +74,52 @@ Desglose que se deduce de esos dos valores (no hace falta medirlo aparte):
 
 **Estas mediciones corresponden al modelo con el cerramiento ya cambiado a panel y con las rótulas nuevas de correas y columnas de frontis ya aplicadas** (confirmado por Juan 02/09). Que el modelo haya cerrado equilibrio con esas rótulas confirma de paso que no quedó ningún mecanismo.
 
-### V₀ actualizado por el cambio de chapa a panel (02/09)
+### Coeficiente sísmico C — derivación verificada contra el reglamento (02/09)
 
-El cerramiento pasó de **chapa 0,6mm (0,06 kN/m²)** a **panel Maxiroof PUR 50mm (0,105 kN/m²)** — ver el peso adoptado en el archivo de proyecto. Superficie de cerramiento implícita: 196,96 / 0,105 = **1.876 m²**.
+**C = 0,13**, calculado con **[6.3]** (no despejado de V₀/W). Texto del reglamento, Art. 6.2.2:
 
-| | W (kN) | V₀ (kN) |
-|---|---|---|
-| Con chapa (estado del 28/08) | 1.698,55 | 364,83 |
-| **Con panel (estado actual)** | **1.787,18** | **383,9** |
+- **[6.3]** `C = 2,5 · Ca · γr / R` — para **T ≤ T2**
+- **[6.4]** `C = Sa · γr / R` — para T > T2
+- **[6.6]** `C = 0,11 · Ca · γr` — mínimo para zonas sísmicas 0, 1 y 2
 
-Aumento: **+5,2%**. El W anterior se reconstruyó escalando LC30 hacia atrás (1.876 m² × 0,06 = 112,55 kN), no se midió — **vale mientras el autopeso de la estructura (LC1) no haya cambiado entre el 28/08 y hoy**. Si se cambiaron secciones en el medio, rehacer.
+Para este proyecto: **Ta = 0,225 s ≤ T2 = 0,6 s** → gobierna [6.3] (tramo de aceleración constante, no hace falta entrar al espectro).
 
-**PENDIENTE — registrar C con su derivación, no despejado.** El **C = 364,83 / 1.698,55 = 0,2148** que se usa arriba está **despejado de V₀/W**, no calculado. C es un coeficiente reglamentario que depende de Ca, Cv, R, γr y T — no de W. Anotar acá la cadena completa (T adoptado, tramo del espectro, Sa, y cómo entran γr=1,3 y R=3) para no seguir arrastrando un valor obtenido por división. Mientras tanto el número sirve, porque **T no sale del modelo** (ver abajo) y la geometría no cambió.
+`C = 2,5 × 0,12 × 1,3 / 3 = 0,13`
+
+El mínimo de [6.6] da `0,11 × 0,12 × 1,3 = 0,017` — no gobierna, queda muy por debajo.
+
+**No despejar C de V₀/W.** C es un coeficiente reglamentario que depende de Ca, γr, R y T — no de W. Despejarlo de un V₀ de otra época propaga cualquier error que tenga ese V₀ (fue exactamente lo que pasó el 02/09: dio 0,2148, un 65% de más).
+
+### ⚠️ V₀ — inconsistencia abierta (02/09), resolver antes de seguir con el capítulo de sismo
+
+Con la fórmula verificada y el W medido del modelo:
+
+`V₀ = C × W = 0,13 × 1.787,18 = **232,3 kN**`
+
+Pero el valor que venía documentado es **V₀ = 364,83 kN**, y el export `Anexo/Añelo - s - Summary.xlsx` (28/08) confirma que el modelo **tiene aplicados 364,774 kN** de carga sísmica horizontal (`Sum of loads in X`). O sea que no es un error de transcripción: es lo que está cargado.
+
+Ese V₀ implica **W = 364,83 / 0,13 = 2.806 kN**, o sea **1.019 kN más** que el CO8 medido (1.787,18 kN).
+
+**Hipótesis más probable**: el V₀ de 364,83 se calculó con un **W estimado a mano** antes de que el modelo diera el peso propio real. Es coherente con la advertencia que encabeza esta misma sección (*"W: NO estimar a mano si se puede evitar — modelar primero... y usar el peso propio real resultante"*), que probablemente se escribió justamente después de esa estimación.
+
+**Qué verificar antes de adoptar 232,3 kN**:
+1. Con qué W se generaron **LC34 (E dir. X)** y **LC35 (E dir. Y)**. Si llevan el V₀ viejo, el modelo está **57% sobrecargado en sismo**.
+2. Que al CO8 actual no le falte ninguna masa (¿entra algo de `f1×L`? ¿alguna zona de cubierta sin superficie de reparto?). Bajar V₀ un 36% es una decisión que hay que poder defender.
+
+**Consecuencia si se confirma**: la distorsión horizontal, que verificaba con márgenes de 1,9x y 1,3x, pasa a verificar con **mucho más margen** — el corte baja un 36%. Eso compensa de sobra la pérdida de rigidez por las rótulas nuevas y el +5,2% de masa del panel.
+
+### Efecto del cambio de chapa a panel sobre W (02/09)
+
+El cerramiento pasó de **chapa 0,6mm (0,06 kN/m²)** a **panel Maxiroof PUR 50mm (0,105 kN/m²)**. Superficie de cerramiento implícita: 196,96 / 0,105 = **1.876 m²**.
+
+| | W (kN) |
+|---|---|
+| Con chapa (estado del 28/08) | 1.698,55 |
+| **Con panel (estado actual)** | **1.787,18** |
+
+**+5,2%**. El W anterior se reconstruyó escalando LC30 hacia atrás (1.876 m² × 0,06 = 112,55 kN), no se midió — vale mientras el autopeso de la estructura (LC1) no haya cambiado entre el 28/08 y hoy.
+
+**T no sale del modelo**: se usa Ta de la fórmula empírica con el tope de [6.7]. Consecuencia práctica: mientras no cambie la geometría, **C queda fijo en 0,13 y V₀ escala lineal con W**.
 
 **Decisión — el 1,05 sobre las cargas permanentes (confirmado por Juan 02/09)**: es un **mayorante del 5% sobre el peso propio** para cubrir lo que el modelo de barras no dibuja — chapas de nudo, bulones, soldadura. Aplicado consistente en CO8 y CO9. No es un factor reglamentario ni parte de la ecuación [3.15]: es un criterio de proyecto, y por eso queda escrito acá.
 
