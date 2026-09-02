@@ -132,6 +132,16 @@ Fc = Fy                                    si Fe ≥ 2,78·Fy
 Mn = Sc·Fc          φb = 0,90
 ```
 
+**Nomenclatura — las tres "S" no son la misma sección**, y mezclarlas es el error fácil:
+
+| | Qué es | Dónde entra |
+|---|---|---|
+| **`Sf`** | módulo resistente de la sección **bruta** (no reducida), fibra extrema comprimida — pura geometría | en `Fe`, y en `Mne = Sf·Fy` |
+| **`Sc`** | módulo de la sección **efectiva** calculada **a la tensión `Fc`** | en `Mn = Sc·Fc` |
+| **`Se`** | módulo de la sección **efectiva a `Fy`** | en `Mn = Se·Fy` y en C.3.1.3 (`R·Se·Fy`) |
+
+La secuencia del artículo es esa: `Sf` (bruta) sirve para estimar `Fc`, y recién con `Fc` se calcula `Sc`. **El pandeo local entra una sola vez, en `Sc`.** Si el perfil resulta totalmente efectivo, `Sc = Sf` y se puede comparar secciones a mano sin iterar anchos efectivos — es lo que pasó con el PC 160x60x20x3,2 en F-24.
+
 `Cb` por Ec. C.3.1.2.1-10; **Cb = 1,0 siempre está permitido y es conservador** (para carga uniforme simplemente apoyada da 1,136 — la diferencia suele no cambiar la conclusión, conviene correr las dos).
 
 **Validado**: con el PC 160x60x20x2,5 del Ejemplo N°3 de los *Ejemplos de Aplicación* del 303 y Lb = 450 cm, esta implementación devuelve **Fe = 88,97 MPa**, idéntico al valor publicado. Sirve para comparar secciones a mano sin depender del software.
