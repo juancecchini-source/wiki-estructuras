@@ -100,7 +100,7 @@ Motivo: el reparto manual del método estático (por zona nave/alero, por altura
 - **[7.2.3]** Modos a considerar: hasta que la masa acumulada sea ≥90% en cada dirección analizada.
 - **[7.1]** Cm = Sam × γr / R — ordenada espectral por modo (misma lógica de C que ya usamos, aplicada modo por modo).
 - **[7.2.4]** Superposición modal: **CQC**. Si los períodos de los modos a superponer difieren >10% entre sí, se admite SRSS.
-- **[7.2.5] Solicitaciones mínimas**: si el corte basal dinámico (Voe) resulta **menor al 85%** del corte basal estático V₀ (según 6.2 — ya calculado, V₀=364,83 kN), escalar las solicitaciones dinámicas por 0,85×V₀/Voe.
+- **[7.2.5] Solicitaciones mínimas**: si el corte basal dinámico (Voe) resulta **menor al 85%** del corte basal estático V₀ (según 6.2 — el valor vigente vive en `calculo-polideportivo-anelo.md`), escalar las solicitaciones dinámicas por 0,85×V₀/Voe.
 - **[7.2.6]** Torsión accidental en el método dinámico: se modela corriendo el centro de masa la distancia ec_ak (misma Tabla 6.3), no como momento torsor aparte.
 - **[7.1.2]**: diafragmas NO rígidos (nuestro caso, flexible) requieren grados de libertad adicionales para los movimientos relativos entre masas — se resuelve solo al usar "masas desde combinación de carga" (reparte masa nodo por nodo según la carga real, no 2 masas lumped por zona).
 

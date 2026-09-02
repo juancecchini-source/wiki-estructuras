@@ -2,7 +2,7 @@
 name: index
 description: Puerta de entrada obligatoria. Leer primero, saltar solo al archivo que hace falta.
 status: ACTIVO
-last_updated: 2026-08-31
+last_updated: 2026-09-02
 ---
 
 # Índice — Wiki de Ingeniería (precálculos estructurales)
@@ -16,7 +16,7 @@ last_updated: 2026-08-31
 - `metodo-cirsoc301-acero.md` — ACTIVO. Diseño de acero (CIRSOC 301-18 / AISC 360-2010), configuración correcta de Steel Design en RFEM: límites de flecha reales (Tabla L.3.1) y por qué "Seismic Configuration (OMF)" no corresponde a INPRES-CIRSOC 103.
 - `normativa-vigente.md` — ACTIVO. Estado de vigencia de cada reglamento CIRSOC, con fecha de última verificación. Revisar antes de arrancar un proyecto nuevo.
 - `rfem-gotchas.md` — ACTIVO. Comportamientos no obvios del software (wizards, add-ons, visualización).
-- `rfem-buenas-practicas.md` — ACTIVO. Prácticas recomendadas por Dlubal para cualquier proyecto: verificación de modelo (Model Check/Plausibility Check), tolerancias, equilibrio global, mallado FE, reducción de combinaciones, backups/versionado.
+- `rfem-buenas-practicas.md` — ACTIVO. Prácticas recomendadas por Dlubal para cualquier proyecto: verificación de modelo (Model Check/Plausibility Check), **verificación de orientación/rotación de secciones**, tolerancias, equilibrio global, mallado FE, reducción de combinaciones, backups/versionado.
 - `materiales-perfiles.md` — ESTABLE. Equivalencias W/A992 vs IPN-UPN/F24-F36.
 
 ## Proyectos (viven mientras dura el proyecto, después pasan a HISTORICO)

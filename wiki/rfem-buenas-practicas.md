@@ -21,6 +21,22 @@ Dos herramientas distintas, ambas en el menú **Tools**, para correr antes de "C
 
 - **Tools → Plausibility Check**: detecta problemas de consistencia de datos de entrada (no geometría). Dos niveles: **"Normal"** (campos faltantes en una tabla) y **"With warnings"** (chequeo más detallado, incluye también nodos de coordenadas idénticas). Recomendado correrlo **antes de calcular**, no después. Fuente: [Plausibility Check | Calculation | RFEM 6](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6/000436), [Tips & Tricks: Plausibility Check (KB 000897)](https://www.dlubal.com/en/support-and-learning/support/knowledge-base/000897).
 
+## Verificar la ORIENTACIÓN (rotación de sección) de los elementos, no solo su posición
+
+Ni **Model Check** ni **Plausibility Check** detectan una sección **girada 90°**: geométricamente el modelo es impecable — el miembro está donde va, conectado a los nodos correctos, con la sección correcta. Lo único que está mal es el **ángulo de rotación de la sección alrededor de su eje longitudinal**, y eso RFEM lo toma como un dato de entrada válido. Es un error silencioso: no da warning, calcula sin quejarse, y el resultado es numéricamente correcto para el modelo que se le describió.
+
+**Por qué importa tanto en secciones abiertas**: en un perfil C conformado en frío la relación Iy/Iz es del orden de **7 a 1**. Girar la sección 90° no penaliza un 10 o 20% — divide la rigidez y la resistencia por **casi un orden de magnitud**. En un perfil W la relación es parecida o peor.
+
+**Cómo verificarlo — tres chequeos, del más rápido al más completo:**
+
+1. **Un η absurdo es un síntoma de modelado, no de sección chica.** Si un elemento secundario (correa, puntal, tensor) da η > 3, la explicación casi nunca es "falta sección": nadie elige una sección 5 veces más chica de lo necesario. Antes de agrandar el perfil, sospechar del modelo. Con η > 10 en ELS, directamente asumirlo.
+2. **Cruzar el ratio de solicitaciones contra el ratio de inercias.** En el Design Check Details, comparar `Mz/My` de las *Design Internal Forces* contra `Iy/Iz` de las *Section Properties*. Si la carga dominante del elemento está flexionando el **eje débil**, hay que justificar por qué — en una correa de pared, un puntal o una viga, la carga principal debe ir al eje fuerte. Ejemplo real (Añelo, correa de pared C120/50/2,5): `Mz/My = 7,90/0,38 = 20,8` con `Iy/Iz = 6,85` — el viento, que es la carga que gobierna, estaba entrando enteramente por el eje débil.
+3. **Mirarlo en pantalla**: activar la visualización del modelo con secciones renderizadas y los **ejes locales** de miembro (Display navigator → Model → Members → *Member Axis Systems* / *Cross-Sections*). Es el chequeo definitivo, y conviene hacerlo por familia de elementos (todas las correas de pared juntas, todas las de cubierta juntas), no miembro por miembro: **el error de rotación es sistemático** — si se generó una correa girada, están giradas todas las de esa familia, porque salen de la misma operación de copia/generación.
+
+**Cuándo correr este chequeo**: junto con Model Check y Plausibility Check, antes de la primera corrida completa; y otra vez apenas aparece un η fuera de escala. Es barato y evita rehacer verificaciones completas.
+
+**Corolario de la misma familia**: no dar por sentado qué eje local es el fuerte. En la columna del pórtico de Añelo, la flexión de eje débil ocurre alrededor del eje local **z** y la de eje mayor alrededor del **y** — pero eso depende de la rotación real de la sección y hay que verificarlo de nuevo en cada tipo de elemento (ver `proyecto-polideportivo-anelo.md`).
+
 ## Verificar Load Combinations ANTES de la primera corrida completa (no reactivo, siempre que haya combinatoria compuesta)
 
 Cuando un proyecto tiene alguna Action con componentes que deben combinarse entre sí según reglas específicas (no alternativas simples como el viento) — típicamente nieve con arrastre/deslizamiento/zonas, pero puede aplicarse a cualquier caso similar — **no confiar en que el generador automático de RFEM las combinó bien solo porque no tiró error**. El generador no avisa cuando genera combinaciones incompletas (le falta un término compañero obligatorio) — es indistinguible de una combinación válida mirando la UI, y a la escala de cientos de combinaciones es inviable revisarlas una por una a simple vista.
