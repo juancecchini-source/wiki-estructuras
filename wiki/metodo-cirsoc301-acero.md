@@ -95,8 +95,12 @@ En una correa de pared (o de cubierta) el revestimiento amura al **ala exterior*
 
 #### Cómo aislar el caso de succión en RFEM
 
-1. **Identificar los Load Cases de viento que dan succión sobre esa pared.** El criterio robusto no es el signo del momento (depende de la orientación de los ejes locales, que ya nos jugó una mala pasada) sino **el signo de la deformación**: en `Results → Members → Deformations`, la correa que se desplaza **hacia afuera** del edificio está en succión.
-2. **Separar el chequeo en dos Design Situations** en Steel Design, una con los LC/CO de presión y otra con los de succión (Design Situations acepta filtrar por combinaciones).
+1. **Identificar los Load Cases de viento que dan succión sobre esa pared.** El criterio robusto no es el signo del momento (depende de la orientación de los ejes locales, que ya nos jugó una mala pasada) sino **hacia dónde se deforma la correa**: la que se desplaza **hacia afuera** del edificio está en succión. Dónde mirarlo, exactamente:
+   - **Panel izquierdo (el Navigator).** En su **borde inferior** tiene cuatro pestañas: `Data`, `Display`, `Views` y `Results`. **`Results` recién aparece después de calcular.** Entrar en esa.
+   - Dentro de `Navigator - Results`, expandir la categoría **`Members`** y tildar **`Deformations`**.
+   - **Arriba, en la barra de herramientas**, está la **lista desplegable de Load Cases y Combinations**. A su derecha hay dos botones (◀ ▶) para pasar al anterior/siguiente sin abrir la lista.
+   - Recorrer con esos botones los LC de viento y mirar en el 3D para qué lado se va la correa. Los números están en la tabla de abajo, categoría **`Results by Member`**.
+2. **Separar el chequeo en dos Design Situations** en Steel Design, una con los LC/CO de presión y otra con los de succión (Design Situations acepta filtrar por combinaciones). Se configuran desde `Navigator - Data`, no desde el de Results.
 3. **Asignar un objeto *Effective Lengths* distinto a cada una**: la de presión con el ala comprimida arriostrada (Lb chico), la de succión con **Lb = separación real de riostras del ala interior** — y si no hay riostras, Lb = la luz completa.
 4. Recién ahí comparar los dos η. El que gobierne es el que manda.
 

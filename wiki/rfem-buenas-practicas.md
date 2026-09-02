@@ -9,6 +9,27 @@ last_updated: 2026-08-31
 
 Complementa a `rfem-gotchas.md` (comportamientos no obvios/errores ya pisados) — este archivo son prácticas recomendadas por Dlubal para cualquier proyecto, a aplicar de entrada.
 
+## Dónde está cada cosa en la ventana de RFEM 6 (referencia rápida)
+
+Anotado el 02/09 porque las instrucciones tipo "Results → Members → Deformations" se leen como un menú de la barra superior y **no lo son**: son ramas de un árbol en el panel izquierdo.
+
+- **Panel izquierdo = el Navigator.** Es un árbol, y en su **borde inferior** tiene cuatro pestañas para cambiar de navegador:
+
+  | Pestaña | Para qué |
+  |---|---|
+  | `Data` | modelo, cargas, datos de diseño (Load Cases, Types for Steel Design, Design Situations…) |
+  | `Display` | qué se dibuja en pantalla (ejes locales, secciones renderizadas, numeración…) |
+  | `Views` | vistas parciales y visibilidades guardadas |
+  | `Results` | qué resultado se grafica — **aparece recién después de calcular** |
+
+- **`Navigator - Results`** tiene como categorías principales `Members`, `Surfaces` y `Support Reactions`. Bajo **`Members`**: `Deformations`, `Internal Forces`, `Strains`, `Contact Forces`, `Member Hinge Deformations` / `Forces`, `Stresses`.
+- **Barra de herramientas superior**: ahí está la **lista desplegable de Load Cases y Combinations** que decide qué caso se está mirando, con botones **◀ ▶** a su derecha para pasar al anterior/siguiente sin abrir la lista. Es lo que hay que usar para recorrer casos de carga uno por uno.
+- **Tablas numéricas: abajo.** Los resultados por miembro están en la categoría **`Results by Member`**.
+
+Fuentes: [Navigator | User Interface and Settings | RFEM 6](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6/000016), [Results by Member | RFEM 6](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6/000481), [Graphical Results | Tutorial](https://www.dlubal.com/en/downloads-and-information/documents/online-manuals/rfem-6-tutorial-en-us/000420).
+
+**Convención para esta wiki**: cuando un paso viva en un navegador, escribirlo como `Navigator - Results → Members → Deformations` (con el nombre del navegador adelante), y reservar la forma `Menú Tools → ...` para lo que de verdad está en la barra de menús.
+
 ## Verificar el modelo ANTES de calcular
 
 Dos herramientas distintas, ambas en el menú **Tools**, para correr antes de "Calculate All" — no son lo mismo:
@@ -31,7 +52,7 @@ Ni **Model Check** ni **Plausibility Check** detectan una sección **girada 90°
 
 1. **Un η absurdo es un síntoma de modelado, no de sección chica.** Si un elemento secundario (correa, puntal, tensor) da η > 3, la explicación casi nunca es "falta sección": nadie elige una sección 5 veces más chica de lo necesario. Antes de agrandar el perfil, sospechar del modelo. Con η > 10 en ELS, directamente asumirlo.
 2. **Cruzar el ratio de solicitaciones contra el ratio de inercias.** En el Design Check Details, comparar `Mz/My` de las *Design Internal Forces* contra `Iy/Iz` de las *Section Properties*. Si la carga dominante del elemento está flexionando el **eje débil**, hay que justificar por qué — en una correa de pared, un puntal o una viga, la carga principal debe ir al eje fuerte. Ejemplo real (Añelo, correa de pared C120/50/2,5): `Mz/My = 7,90/0,38 = 20,8` con `Iy/Iz = 6,85` — el viento, que es la carga que gobierna, estaba entrando enteramente por el eje débil.
-3. **Mirarlo en pantalla**: activar la visualización del modelo con secciones renderizadas y los **ejes locales** de miembro (Display navigator → Model → Members → *Member Axis Systems* / *Cross-Sections*). Es el chequeo definitivo, y conviene hacerlo por familia de elementos (todas las correas de pared juntas, todas las de cubierta juntas), no miembro por miembro: **el error de rotación es sistemático** — si se generó una correa girada, están giradas todas las de esa familia, porque salen de la misma operación de copia/generación.
+3. **Mirarlo en pantalla**: activar la visualización del modelo con secciones renderizadas y los **ejes locales** de miembro (`Navigator - Display` → Model → Members → *Member Axis Systems* / *Cross-Sections*). Es el chequeo definitivo, y conviene hacerlo por familia de elementos (todas las correas de pared juntas, todas las de cubierta juntas), no miembro por miembro: **el error de rotación es sistemático** — si se generó una correa girada, están giradas todas las de esa familia, porque salen de la misma operación de copia/generación.
 
 **Cuándo correr este chequeo**: junto con Model Check y Plausibility Check, antes de la primera corrida completa; y otra vez apenas aparece un η fuera de escala. Es barato y evita rehacer verificaciones completas.
 
